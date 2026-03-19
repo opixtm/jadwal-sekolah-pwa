@@ -334,45 +334,59 @@
             <!-- Tab Content: Kelola Jadwal (User) -->
             <div id="content-manage" class="tab-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-800 mb-4 text-center">Tambah Kegiatan Rumah</h3>
+                    <h3 class="font-bold text-gray-800 mb-4 text-center">Tambah Jadwal Pelajaran</h3>
                     <div class="grid grid-cols-1 gap-4">
-                        <select id="user-input-day" class="p-3 border border-gray-200 rounded-xl outline-none bg-white">
-                            <option value="Senin">Senin</option>
-                            <option value="Selasa">Selasa</option>
-                            <option value="Rabu">Rabu</option>
-                            <option value="Kamis">Kamis</option>
-                            <option value="Jumat">Jumat</option>
-                            <option value="Sabtu">Sabtu</option>
-                            <option value="Minggu">Minggu</option>
-                        </select>
-                        <input type="text" id="user-input-subject" placeholder="Nama Kegiatan (Ex: Ngaji)" class="p-3 border border-gray-200 rounded-xl outline-none">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-xs text-gray-400 block mb-1">Mulai</label>
+                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Hari</label>
+                                <select id="user-input-day" class="p-3 border border-gray-200 rounded-xl outline-none bg-indigo-50 w-full font-bold">
+                                    <option value="Senin">Senin</option>
+                                    <option value="Selasa">Selasa</option>
+                                    <option value="Rabu">Rabu</option>
+                                    <option value="Kamis">Kamis</option>
+                                    <option value="Jumat">Jumat</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Mata Pelajaran (List Guru)</label>
+                                <select id="user-select-subject-teacher" class="p-3 border border-gray-200 rounded-xl outline-none bg-white w-full">
+                                    <option value="">Pilih Mata Pelajaran...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Mulai</label>
                                 <input type="time" id="user-input-time-start" class="p-3 border border-gray-200 rounded-xl w-full outline-none">
                             </div>
                             <div>
-                                <label class="text-xs text-gray-400 block mb-1">Selesai</label>
+                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Selesai</label>
                                 <input type="time" id="user-input-time-end" class="p-3 border border-gray-200 rounded-xl w-full outline-none">
                             </div>
                         </div>
-                        <button id="user-save-jadwal-btn" class="bg-indigo-600 text-white rounded-xl p-3 font-bold shadow-lg hover:bg-indigo-700 transition-all">Simpan Kegiatan</button>
+                        <button id="user-save-jadwal-btn" class="bg-indigo-600 text-white rounded-xl p-3 font-bold shadow-lg hover:bg-indigo-700 transition-all mt-4 w-full">Simpan ke Jadwal Pelajaran</button>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HARI</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KEGIATAN</th>
-                                <th class="px-4 py-3 text-right"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-manage-jadwal-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Injected -->
-                        </tbody>
-                    </table>
+                    <div class="bg-gray-50 px-4 py-3 border-b">
+                        <h4 class="font-bold text-gray-700 text-xs uppercase tracking-wider">Jadwal Mingguan Saya</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Hari</th>
+                                    <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Pelajaran</th>
+                                    <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">Jam</th>
+                                    <th class="px-4 py-3 text-right text-[10px] font-bold text-gray-400 uppercase">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-manage-table-body" class="bg-white divide-y divide-gray-100">
+                                <!-- Injected -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

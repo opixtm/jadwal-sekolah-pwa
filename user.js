@@ -477,14 +477,31 @@ window.viewImage = (src) => {
     document.body.appendChild(viewer);
 };
 
-// --- User Schedule Management (Home Activities) ---
+// --- User Schedule Management (Pelajaran Mingguan) ---
 function loadUserScheduleManager() {
-    const tableBody = document.getElementById('user-manage-jadwal-table-body');
+    const tableBody = document.getElementById('user-manage-table-body');
     const saveBtn = document.getElementById('user-save-jadwal-btn');
+    const subjectSelect = document.getElementById('user-select-subject-teacher');
 
-    if (!tableBody || !saveBtn) return;
+    if (!tableBody || !saveBtn || !subjectSelect) return;
 
-    // Listen to MY schedules (only those I created)
+    // 1. Populate Subject/Teacher Dropdown from Database Guru
+    onSnapshot(collection(db, "contacts"), (snapshot) => {
+        const currentVal = subjectSelect.value;
+        subjectSelect.innerHTML = '<option value="">Pilih Mata Pelajaran...</option>';
+        snapshot.forEach((docSnap) => {
+            const item = docSnap.data();
+            if (item.type === 'guru') {
+                const opt = document.createElement('option');
+                opt.value = `${item.subject}|${item.name}`; // Store both subject and teacher
+                opt.textContent = `${item.subject} (${item.name})`;
+                subjectSelect.appendChild(opt);
+            }
+        });
+        subjectSelect.value = currentVal;
+    });
+
+    // 2. Listen to MY schedules (only those I created)
     const q = query(
         collection(db, "schedules"), 
         where("userId", "==", currentUserId)
@@ -496,20 +513,29 @@ function loadUserScheduleManager() {
             items.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        // Client-side sort to avoid Firebase index requirement
-        items.sort((a, b) => (a.day || "").localeCompare(b.day || ""));
+        // Client-side sort: Day and then Time
+        const dayOrder = { "Senin": 1, "Selasa": 2, "Rabu": 3, "Kamis": 4, "Jumat": 5, "Sabtu": 6, "Minggu": 7 };
+        items.sort((a, b) => {
+            if (dayOrder[a.day] !== dayOrder[b.day]) {
+                return dayOrder[a.day] - dayOrder[b.day];
+            }
+            return (a.time || "").localeCompare(b.time || "");
+        });
 
         tableBody.innerHTML = '';
         items.forEach((item) => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${item.day}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <div class="font-bold">${item.subject}</div>
-                    <div class="text-[10px] text-gray-400">${item.time}</div>
+                <td class="px-4 py-3 whitespace-nowrap text-xs font-bold text-gray-700">${item.day}</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    <div class="text-sm font-bold text-indigo-600">${item.subject}</div>
+                    <div class="text-[10px] text-gray-400 font-medium">${item.teacher || '-'}</div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                    <button onclick="window.deleteUserJadwal('${item.id}')" class="text-red-500 p-1"><i class="fas fa-trash"></i></button>
+                <td class="px-4 py-3 whitespace-nowrap text-[10px] text-gray-500 font-mono">${item.time}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                    <button onclick="window.deleteUserJadwal('${item.id}')" class="text-red-400 hover:text-red-600 transition-colors p-2">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -517,33 +543,35 @@ function loadUserScheduleManager() {
     });
 
     saveBtn.onclick = async () => {
-        const subject = document.getElementById('user-input-subject').value;
+        const subTeacherVal = subjectSelect.value;
         const timeStart = document.getElementById('user-input-time-start').value;
         const timeEnd = document.getElementById('user-input-time-end').value;
         const day = document.getElementById('user-input-day').value;
 
-        if (!subject || !timeStart || !timeEnd) {
-            alert("Nama Kegiatan dan Jam wajib diisi!");
+        if (!subTeacherVal || !timeStart || !timeEnd) {
+            alert("Harap pilih Mata Pelajaran dan isi Jam!");
             return;
         }
 
+        const [subject, teacher] = subTeacherVal.split('|');
         const fullTime = `${timeStart} - ${timeEnd}`;
 
         try {
             await addDoc(collection(db, "schedules"), {
                 subject,
-                teacher: "Kegiatan Rumah",
+                teacher,
                 time: fullTime,
                 day,
                 userId: currentUserId,
-                createdAt: new Date()
+                createdAt: serverTimestamp()
             });
-            // Clear inputs
-            document.getElementById('user-input-subject').value = '';
+            // Reset inputs
+            subjectSelect.value = '';
             document.getElementById('user-input-time-start').value = '';
             document.getElementById('user-input-time-end').value = '';
         } catch (error) {
             console.error("Error adding user schedule:", error);
+            alert("Gagal menyimpan jadwal. Coba lagi.");
         }
     };
 }
