@@ -1,10 +1,29 @@
 // user.js
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection, query, where, orderBy, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, onSnapshot, getDocs, serverTimestamp, collection, query, where, orderBy, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+let habitsUnsubscribe = null;
 let currentUserId = null;
 let userGrade = null;
 let activeSemester = "Ganjil";
+
+// --- Safari/Security Fallback Listener ---
+async function safeListener(queryRef, callback, errorCallback) {
+    try {
+        return onSnapshot(queryRef, snapshot => callback(snapshot), err => {
+            console.warn("⚠️ User onSnapshot failed, falling back to polling:", err);
+            getDocs(queryRef).then(snapshot => callback(snapshot)).catch(e => errorCallback?.(e));
+            const interval = setInterval(() => {
+                getDocs(queryRef).then(snapshot => callback(snapshot)).catch(e => {
+                    clearInterval(interval);
+                });
+            }, 60000); // Polling 1 minute for user view
+            errorCallback?.(err);
+        });
+    } catch (e) {
+        console.error("Critical listener init error:", e);
+    }
+}
 
 export async function initUser() {
     console.log('User Module Initialized');
@@ -89,8 +108,8 @@ function loadFlashNote() {
     const noteText = document.getElementById('flash-note-text');
     if (!noteCard || !noteText) return;
 
-    onSnapshot(doc(db, 'users', currentUserId), (snap) => {
-        const note = snap.exists() && snap.data().flashNote;
+    safeListener(doc(db, "progress", currentUserId), (docSnap) => {
+        const note = docSnap.exists() && docSnap.data().flashNote;
         if (note) {
             noteText.textContent = note;
             noteCard.classList.remove('hidden');
@@ -117,7 +136,7 @@ function loadSchedule() {
         where("day", "==", today)
     );
     
-    onSnapshot(q, (snapshot) => {
+    safeListener(q, (snapshot) => {
         if (jadwalList) {
             // Local filter for Common OR specific User
             const docs = snapshot.docs.filter(d => {
@@ -166,7 +185,7 @@ function loadExams() {
     const ujianList = document.getElementById('ujian-list');
     const docRef = doc(db, 'progress', currentUserId);
     
-    onSnapshot(docRef, (docSnap) => {
+    safeListener(docRef, (docSnap) => {
         if (!ujianList) return;
         ujianList.innerHTML = '';
         
@@ -213,7 +232,7 @@ async function loadTasks() {
     const tasksList = document.getElementById('tasks-list');
     const q = doc(db, 'progress', currentUserId);
 
-    onSnapshot(q, (docSnap) => {
+    safeListener(q, (docSnap) => {
         if (!docSnap.exists()) {
             initProgressDoc();
             return;
@@ -285,7 +304,7 @@ async function loadHabits() {
         await setDoc(logRef, { habits: defaultHabits, date: today, updatedAt: serverTimestamp() }, { merge: true });
     }
 
-    onSnapshot(logRef, (snap) => {
+    safeListener(logRef, (snap) => {
         if (!habitsList) return;
         habitsList.innerHTML = '';
         if (!snap.exists()) return;
@@ -350,7 +369,7 @@ function loadContacts() {
     const friendsList = document.getElementById('kontak-teman');
 
     // Fetch teachers from DB (contacts collection where type == 'guru')
-    onSnapshot(collection(db, "contacts"), (snapshot) => {
+    safeListener(collection(db, "contacts"), (snapshot) => {
         if (!teachersList) return;
         teachersList.innerHTML = '';
         snapshot.forEach(docSnap => {
@@ -510,7 +529,7 @@ function loadUserScheduleManager() {
     if (!tableBody || !saveBtn) return;
 
     // 1. Populate Teacher Datalist from Contacts (Admin-set teachers)
-    onSnapshot(collection(db, "contacts"), (snapshot) => {
+    safeListener(collection(db, "contacts"), (snapshot) => {
         if (teacherDatalist) {
             teacherDatalist.innerHTML = '';
             snapshot.forEach((docSnap) => {
@@ -530,7 +549,7 @@ function loadUserScheduleManager() {
         where("userId", "==", currentUserId)
     );
 
-    onSnapshot(q, (snapshot) => {
+    safeListener(q, (snapshot) => {
         const items = [];
         snapshot.forEach((docSnap) => {
             items.push({ id: docSnap.id, ...docSnap.data() });

@@ -1,6 +1,6 @@
 // admin.js
 import { db } from './firebase-config.js';
-import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, addDoc, setDoc, getDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, query, getDocs, where, onSnapshot, doc, updateDoc, deleteDoc, addDoc, setDoc, getDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export function initAdmin() {
     loadUsers();
@@ -25,49 +25,53 @@ function loadUsers() {
     const userTableBody = document.getElementById('user-table-body');
     if (!userTableBody) return;
 
-    onSnapshot(collection(db, "users"), (snapshot) => {
+    safeListener(collection(db, "users"), (snapshot) => {
         userTableBody.innerHTML = '';
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
             const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50 transition-colors';
             tr.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0 h-10 w-10">
-                            <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random" alt="">
+                        <div class="flex-shrink-0 h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-700">
+                            ${user.displayName ? user.displayName.charAt(0) : 'U'}
                         </div>
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900">${user.displayName || 'Unknown'}</div>
-                            <div class="text-sm text-gray-500">${user.email}</div>
+                            <div class="text-sm font-bold text-gray-900">${user.displayName || 'Unknown'}</div>
+                            <div class="text-xs text-gray-400">${user.email}</div>
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${user.role === 'Admin' ? 'bg-purple-100 text-purple-800' : 
-                          user.role === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                    <span class="px-2 inline-flex text-[10px] leading-5 font-bold rounded-full ${getStatusColor(user.role)}">
                         ${user.role}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-bold uppercase">
                     ${user.grade || '-'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     ${user.role === 'Pending' ? `
-                        <select id="grade-sel-${docSnap.id}" class="text-xs border rounded p-1">
-                            <option value="">Set Kelas...</option>
-                            <optgroup label="SD"><option>Kelas 1</option><option>Kelas 2</option><option>Kelas 3</option><option>Kelas 4</option><option>Kelas 5</option><option>Kelas 6</option></optgroup>
-                            <optgroup label="SMP"><option>Kelas 7</option><option>Kelas 8</option><option>Kelas 9</option></optgroup>
-                            <optgroup label="SMA"><option>Kelas 10</option><option>Kelas 11</option><option>Kelas 12</option></optgroup>
-                        </select>
-                        <button onclick="window.approveWithGrade('${docSnap.id}')" class="text-indigo-600 hover:text-indigo-900">Approve</button>
+                        <div class="flex flex-col gap-2 items-end">
+                            <div class="flex gap-1 items-center">
+                                <select id="grade-sel-${docSnap.id}" class="text-[10px] border rounded p-1 bg-white font-bold h-7">
+                                    <option value="">Set Kelas...</option>
+                                    <optgroup label="SD"><option>Kelas 1</option><option>Kelas 2</option><option>Kelas 3</option><option>Kelas 4</option><option>Kelas 5</option><option>Kelas 6</option></optgroup>
+                                    <optgroup label="SMP"><option>Kelas 7</option><option>Kelas 8</option><option>Kelas 9</option></optgroup>
+                                    <optgroup label="SMA"><option>Kelas 10</option><option>Kelas 11</option><option>Kelas 12</option></optgroup>
+                                </select>
+                                <button onclick="window.approveWithGrade('${docSnap.id}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-[10px] font-bold h-7">Setujui Siswa</button>
+                            </div>
+                            <button onclick="window.updateUserStatus('${docSnap.id}', 'Admin')" class="text-purple-600 hover:text-purple-900 text-[10px] font-black underline uppercase">Jadikan Admin (Tanpa Kelas)</button>
+                        </div>
                     ` : ''}
                     ${user.role === 'Approved' ? `
-                        <button onclick="window.updateUserStatus('${docSnap.id}', 'Admin')" class="text-purple-600 hover:text-purple-900">Make Admin</button>
+                        <button onclick="window.updateUserStatus('${docSnap.id}', 'Admin')" class="text-purple-600 hover:text-purple-900 text-xs font-bold font-mono">MAKE ADMIN</button>
                     ` : ''}
                     ${user.role !== 'Admin' ? `
-                        <button onclick="window.deleteUser('${docSnap.id}')" class="text-red-600 hover:text-red-900">Delete</button>
-                    ` : '<span class="text-gray-400">Owner</span>'}
+                        <button onclick="window.deleteUser('${docSnap.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold font-mono">DELETE</button>
+                    ` : '<span class="text-gray-400 text-[10px] font-black uppercase italic">Owner / System</span>'}
                 </td>
             `;
             userTableBody.appendChild(tr);
@@ -94,7 +98,7 @@ function loadParentalMonitoring() {
 
     // Load approved users into dropdown
     const q = query(collection(db, 'users'), where('role', '==', 'Approved'));
-    onSnapshot(q, (snapshot) => {
+    safeListener(q, (snapshot) => {
         childSelect.innerHTML = '<option value="">Pilih...</option>';
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
@@ -155,7 +159,7 @@ function loadFlashNoteForChild(uid) {
     const flashNoteInput = document.getElementById('flash-note-input');
     if (!flashNoteInput) return;
     
-    flashNoteUnsubscribe = onSnapshot(doc(db, 'users', uid), (snap) => {
+    flashNoteUnsubscribe = safeListener(doc(db, 'users', uid), (snap) => {
         flashNoteInput.value = snap.exists() ? (snap.data().flashNote || '') : '';
     }, (err) => {
         console.error("Flash note listener error:", err);
@@ -178,7 +182,7 @@ function subscribeToChildProgress(uid, date) {
     const logRef = doc(db, 'progress', uid, 'logs', date);
     const rootRef = doc(db, 'progress', uid);
 
-    progressUnsubscribe = onSnapshot(logRef, (docSnap) => {
+    progressUnsubscribe = safeListener(logRef, (docSnap) => {
         if (!docSnap.exists()) {
             // If log doesn't exist, fetch fallback once from root doc (not needed to listen continuously if it doesn't exist)
             getDoc(rootRef).then(rootSnap => {
@@ -311,7 +315,7 @@ function loadScheduleManager() {
     if (!tableBody || !saveBtn) return;
 
     // Load Teachers into datalist for suggestions
-    onSnapshot(query(collection(db, 'contacts'), where('type', '==', 'guru')), (snap) => {
+    safeListener(query(collection(db, 'contacts'), where('type', '==', 'guru')), (snap) => {
         if (teacherDatalist) {
             teacherDatalist.innerHTML = '';
             snap.forEach(d => {
@@ -325,7 +329,7 @@ function loadScheduleManager() {
 
     // Listen to schedules collection
     const q = query(collection(db, "schedules"), orderBy("day"), orderBy("time"));
-    onSnapshot(q, (snapshot) => {
+    safeListener(q, (snapshot) => {
         tableBody.innerHTML = '';
         snapshot.forEach((docSnap) => {
             const item = docSnap.data();
@@ -395,7 +399,7 @@ function loadTeacherManager() {
 
     if (!tableBody || !saveBtn) return;
 
-    onSnapshot(collection(db, "contacts"), (snapshot) => {
+    safeListener(collection(db, "contacts"), (snapshot) => {
         tableBody.innerHTML = '';
         snapshot.forEach((docSnap) => {
             const item = docSnap.data();
@@ -573,6 +577,28 @@ window.approveWithGrade = async (id) => {
     if (!grade) { alert('Pilih kelas dulu!'); return; }
     await updateDoc(doc(db, "users", id), { role: 'Approved', grade: grade });
 };
+
+// --- Safari/Security Fallback Listener ---
+// If real-time onSnapshot is blocked, we fall back to periodic manual fetch (polling)
+async function safeListener(queryRef, callback, errorCallback) {
+    try {
+        return onSnapshot(queryRef, snapshot => callback(snapshot), err => {
+            console.warn("⚠️ onSnapshot failed, falling back to manual polling:", err);
+            // Fallback: initial fetch
+            getDocs(queryRef).then(snapshot => callback(snapshot)).catch(e => errorCallback?.(e));
+            // Periodic polling every 5 seconds
+            const interval = setInterval(() => {
+                getDocs(queryRef).then(snapshot => callback(snapshot)).catch(e => {
+                    console.error("Polling error:", e);
+                    clearInterval(interval);
+                });
+            }, 5000);
+            errorCallback?.(err);
+        });
+    } catch (e) {
+        console.error("Critical listener init error:", e);
+    }
+}
 
 function initAdminTabs() {
     const tabs = ['users', 'manage-jadwal', 'manage-guru', 'monitoring', 'config'];
