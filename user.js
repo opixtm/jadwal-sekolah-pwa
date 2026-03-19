@@ -16,6 +16,36 @@ export function initUser() {
     initModals();
 }
 
+async function compressImage(base64Str) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+    });
+}
+
 function loadSchedule() {
     const jadwalList = document.getElementById('jadwal-list');
     const ujianList = document.getElementById('ujian-list');
@@ -245,40 +275,50 @@ function loadContacts() {
     const teachersList = document.getElementById('kontak-guru');
     const friendsList = document.getElementById('kontak-teman');
 
-    const teachers = [
-        { name: 'Pak Budi', subject: 'Matematika' },
-        { name: 'Bu Siti', subject: 'Bahasa Indonesia' }
-    ];
+    // Fetch teachers from DB (contacts collection where type == 'guru')
+    onSnapshot(collection(db, "contacts"), (snapshot) => {
+        if (!teachersList) return;
+        teachersList.innerHTML = '';
+        snapshot.forEach(docSnap => {
+            const t = docSnap.data();
+            if (t.type === 'guru') {
+                teachersList.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">${t.name[0]}</div>
+                            <div>
+                                <div class="font-bold text-sm text-gray-800">${t.name}</div>
+                                <div class="text-xs text-gray-500">${t.subject}</div>
+                            </div>
+                        </div>
+                        <a href="https://wa.me/${t.phone.replace(/[^0-9]/g, '')}" target="_blank" class="text-green-500 text-xl"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                `;
+            }
+        });
+    });
+
     const friends = [
         { name: 'Andi', role: 'Teman Sekelas' },
         { name: 'Budi', role: 'Teman Sekelas' }
     ];
-
-    teachersList.innerHTML = teachers.map(t => `
-        <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold">${t.name[0]}</div>
-            <div>
-                <div class="font-bold text-sm text-gray-800">${t.name}</div>
-                <div class="text-xs text-gray-500">${t.subject}</div>
+    if (friendsList) {
+        friendsList.innerHTML = friends.map(f => `
+            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">${f.name[0]}</div>
+                <div>
+                    <div class="font-bold text-sm text-gray-800">${f.name}</div>
+                    <div class="text-xs text-gray-500">${f.role}</div>
+                </div>
             </div>
-        </div>
-    `).join('');
-
-    friendsList.innerHTML = friends.map(f => `
-        <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">${f.name[0]}</div>
-            <div>
-                <div class="font-bold text-sm text-gray-800">${f.name}</div>
-                <div class="text-xs text-gray-500">${f.role}</div>
-            </div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 }
 
 async function initProgressDoc() {
     const initialTasks = [
-        { name: 'PR Matematika Hal 10', category: 'Tugas Utama', completed: false },
-        { name: 'Catatan Biologi', category: 'Notes', completed: false }
+        { title: 'PR Matematika Hal 10', category: 'Tugas Utama', completed: false },
+        { title: 'Catatan Biologi', category: 'Catatan', completed: false }
     ];
     const initialHabits = [
         { name: 'Shalat 5 Waktu', completed: false },
@@ -307,12 +347,12 @@ window.uploadTaskPhoto = async (index, input) => {
     if (input.files[0]) {
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const base64 = e.target.result;
+            const compressedBase64 = await compressImage(e.target.result);
             const docRef = doc(db, 'progress', currentUserId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const tasks = docSnap.data().tasks;
-                tasks[index].photo = base64;
+                tasks[index].photo = compressedBase64;
                 await setDoc(docRef, { tasks: tasks }, { merge: true });
             }
         };
@@ -359,12 +399,12 @@ window.uploadHabitPhoto = async (index, input) => {
     if (input.files[0]) {
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const base64 = e.target.result;
+            const compressedBase64 = await compressImage(e.target.result);
             const docRef = doc(db, 'progress', currentUserId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const habits = docSnap.data().habits;
-                habits[index].photo = base64; // Using base64 for small PWA demo images
+                habits[index].photo = compressedBase64; 
                 await setDoc(docRef, { habits: habits }, { merge: true });
             }
         };

@@ -16,7 +16,7 @@ export function initAdmin() {
     };
 }
 
-function loadUserList() {
+function loadUsers() {
     const userTableBody = document.getElementById('user-table-body');
     if (!userTableBody) return;
 
