@@ -430,14 +430,20 @@ function loadUserScheduleManager() {
     // Listen to MY schedules (only those I created)
     const q = query(
         collection(db, "schedules"), 
-        where("userId", "==", currentUserId),
-        orderBy("day")
+        where("userId", "==", currentUserId)
     );
 
     onSnapshot(q, (snapshot) => {
-        tableBody.innerHTML = '';
+        const items = [];
         snapshot.forEach((docSnap) => {
-            const item = docSnap.data();
+            items.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Client-side sort to avoid Firebase index requirement
+        items.sort((a, b) => (a.day || "").localeCompare(b.day || ""));
+
+        tableBody.innerHTML = '';
+        items.forEach((item) => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${item.day}</td>
@@ -446,7 +452,7 @@ function loadUserScheduleManager() {
                     <div class="text-[10px] text-gray-400">${item.time}</div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                    <button onclick="window.deleteUserJadwal('${docSnap.id}')" class="text-red-500 p-1"><i class="fas fa-trash"></i></button>
+                    <button onclick="window.deleteUserJadwal('${item.id}')" class="text-red-500 p-1"><i class="fas fa-trash"></i></button>
                 </td>
             `;
             tableBody.appendChild(row);

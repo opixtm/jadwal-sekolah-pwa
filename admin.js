@@ -6,7 +6,7 @@ export function initAdmin() {
     loadUsers();
     loadScheduleManager();
     loadTeacherManager();
-    loadMonitoring();
+    loadParentalMonitoring();
     window.viewImage = (src) => {
         const viewer = document.createElement('div');
         viewer.className = 'fixed inset-0 bg-black bg-opacity-90 z-[100] flex items-center justify-center p-4';
@@ -29,29 +29,29 @@ function loadUsers() {
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10">
-                            <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${user.name}&background=random" alt="">
+                            <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=random" alt="">
                         </div>
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900">${user.name}</div>
+                            <div class="text-sm font-medium text-gray-900">${user.displayName || 'Unknown'}</div>
                             <div class="text-sm text-gray-500">${user.email}</div>
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                          user.role === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                        ${user.role === 'Admin' ? 'bg-purple-100 text-purple-800' : 
+                          user.role === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
                         ${user.role}
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    ${user.role === 'pending' ? `
-                        <button onclick="window.updateUserStatus('${docSnap.id}', 'approved')" class="text-indigo-600 hover:text-indigo-900">Approve</button>
+                    ${user.role === 'Pending' ? `
+                        <button onclick="window.updateUserStatus('${docSnap.id}', 'Approved')" class="text-indigo-600 hover:text-indigo-900">Approve</button>
                     ` : ''}
-                    ${user.role === 'approved' ? `
-                        <button onclick="window.updateUserStatus('${docSnap.id}', 'admin')" class="text-purple-600 hover:text-purple-900">Make Admin</button>
+                    ${user.role === 'Approved' ? `
+                        <button onclick="window.updateUserStatus('${docSnap.id}', 'Admin')" class="text-purple-600 hover:text-purple-900">Make Admin</button>
                     ` : ''}
-                    ${user.role !== 'admin' ? `
+                    ${user.role !== 'Admin' ? `
                         <button onclick="window.deleteUser('${docSnap.id}')" class="text-red-600 hover:text-red-900">Delete</button>
                     ` : '<span class="text-gray-400">Owner</span>'}
                 </td>
