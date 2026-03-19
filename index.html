@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JADWAL - Manajemen Sekolah & Rutinitas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    <style>
+        [v-cloak] { display: none; }
+        .tab-active { border-bottom: 3px solid #4F46E5; color: #4F46E5; font-weight: bold; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <!-- Loading State -->
+    <div id="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div class="text-center">
+            <i class="fas fa-spinner fa-spin text-4xl text-indigo-600 mb-4"></i>
+            <p class="text-gray-600">Memuat aplikasi...</p>
+        </div>
+    </div>
+
+    <!-- Login Section -->
+    <section id="login-section" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl card-shadow w-full max-w-md text-center">
+            <div class="mb-8">
+                <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-calendar-check text-4xl text-indigo-600"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-indigo-900">JADWAL</h1>
+                <p class="text-gray-500 mt-2">Manajemen Sekolah & Rutinitas Harian</p>
+            </div>
+            <button id="google-login-btn" class="flex items-center justify-center bg-white border border-gray-300 rounded-lg px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 w-full transition-all">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5 mr-3">
+                Masuk dengan Google
+            </button>
+        </div>
+    </section>
+
+    <!-- Pending Section -->
+    <section id="pending-section" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl card-shadow w-full max-w-md text-center">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-clock text-4xl text-yellow-600"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900">Menunggu Persetujuan</h2>
+                <p class="text-gray-600 mt-2">Akun Anda sedang menunggu persetujuan Admin.</p>
+                <p class="text-sm text-gray-400 mt-4">Silakan hubungi Orang Tua atau Kakak SMA Anda.</p>
+            </div>
+            <button id="logout-btn-pending" class="text-indigo-600 font-medium hover:underline">Keluar (Logout)</button>
+        </div>
+    </section>
+
+    <!-- App Container (Admin & User) -->
+    <div id="app-container" class="hidden">
+        <!-- Top Navigation -->
+        <header class="bg-indigo-600 text-white shadow-lg sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-calendar-alt text-xl"></i>
+                    <span class="font-bold text-lg tracking-tight">JADWAL</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="user-display-name" class="hidden md:inline text-sm font-medium opacity-90"></span>
+                    <button id="logout-btn" class="text-white opacity-80 hover:opacity-100 transition-opacity">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Admin Dashboard Section -->
+        <section id="admin-dashboard" class="hidden max-w-7xl mx-auto p-4">
+            <!-- Admin Tabs -->
+            <div class="flex border-b border-gray-200 mb-6 bg-white rounded-t-xl overflow-hidden">
+                <button id="tab-users-btn" class="flex-1 py-4 text-center tab-active transition-all">
+                    <i class="fas fa-users-cog mr-2"></i> Atur User
+                </button>
+                <button id="tab-monitoring-btn" class="flex-1 py-4 text-center text-gray-500 transition-all">
+                    <i class="fas fa-chart-line mr-2"></i> Monitoring Ortu
+                </button>
+            </div>
+
+            <!-- Tab Content: User Management -->
+            <div id="content-users" class="space-y-4">
+                <h2 class="text-lg font-bold text-gray-900 px-2">Daftar Pengguna</h2>
+                <div class="bg-white rounded-xl card-shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- User rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: Parental Monitoring -->
+            <div id="content-monitoring" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded-xl card-shadow">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Profil Anak:</label>
+                    <select id="child-select" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Pilih...</option>
+                        <!-- Options will be injected -->
+                    </select>
+                </div>
+
+                <div id="monitoring-data" class="hidden space-y-6">
+                    <!-- Progress Bar -->
+                    <div class="bg-white p-6 rounded-xl card-shadow">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Progress Tugas Hari Ini</h3>
+                        <div class="relative pt-1">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div><span id="progress-percent" class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">0%</span></div>
+                                <div class="text-right"><span id="progress-ratio" class="text-xs font-semibold inline-block text-indigo-600">0/0 Selesai</span></div>
+                            </div>
+                            <div class="overflow-hidden h-4 mb-4 text-xs flex rounded bg-indigo-200">
+                                <div id="progress-bar-inner" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Checklist -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-xl card-shadow">
+                            <h4 class="font-bold border-b pb-2 mb-3">Tugas Sekolah (PR/Catatan)</h4>
+                            <ul id="monitoring-tasks-list" class="space-y-2">
+                                <!-- Tasks items -->
+                            </ul>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl card-shadow">
+                            <h4 class="font-bold border-b pb-2 mb-3">Habit (Ibadah & Rumah)</h4>
+                            <ul id="monitoring-habits-list" class="space-y-2">
+                                <!-- Habits items -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Dashboard Section -->
+        <section id="user-dashboard" class="hidden max-w-7xl mx-auto p-4 space-y-6">
+            <!-- Daily Quote/Greeting -->
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg">
+                <h3 class="text-2xl font-bold mb-1">Halo, <span id="hello-name">Sobat</span>! 👋</h3>
+                <p class="opacity-90">Tetap semangat buat aktivitas hari ini ya!</p>
+            </div>
+
+            <!-- User Tabs (Mobile Optimized Bottom Nav style or Top tabs) -->
+            <div id="user-tabs" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide py-3">
+                <button id="btn-tab-jadwal" class="px-5 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-semibold shadow-md whitespace-nowrap">
+                    <i class="fas fa-calendar-day mr-2"></i> Jadwal
+                </button>
+                <button id="btn-tab-tasks" class="px-5 py-2.5 bg-white text-gray-600 rounded-full text-sm font-semibold shadow-sm whitespace-nowrap">
+                    <i class="fas fa-tasks mr-2"></i> Tugas
+                </button>
+                <button id="btn-tab-habits" class="px-5 py-2.5 bg-white text-gray-600 rounded-full text-sm font-semibold shadow-sm whitespace-nowrap">
+                    <i class="fas fa-star mr-2"></i> Kebiasaan
+                </button>
+                <button id="btn-tab-kontak" class="px-5 py-2.5 bg-white text-gray-600 rounded-full text-sm font-semibold shadow-sm whitespace-nowrap">
+                    <i class="fas fa-address-book mr-2"></i> Kontak
+                </button>
+            </div>
+
+            <!-- Tab contents -->
+            <!-- 1. Jadwal & Kalender -->
+            <div id="user-content-jadwal" class="space-y-4">
+                <h3 class="font-bold text-gray-900 border-l-4 border-indigo-500 pl-3">Jadwal Hari Ini</h3>
+                <div id="jadwal-list" class="grid gap-3">
+                    <!-- Cards will be injected -->
+                </div>
+                
+                <h3 class="font-bold text-gray-900 border-l-4 border-yellow-500 pl-3 mt-6">Pengingat Ujian</h3>
+                <div id="ujian-list" class="grid gap-3">
+                    <!-- Ujian cards -->
+                </div>
+            </div>
+
+            <!-- 2. Task Tracker -->
+            <div id="user-content-tasks" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Daftar Tugas & PR</h3>
+                    <button id="add-task-btn" class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg text-sm font-bold">+ Baru</button>
+                </div>
+                <div id="tasks-list" class="grid gap-3">
+                    <!-- Tasks will be injected -->
+                </div>
+            </div>
+
+            <!-- 3. Habit Tracker -->
+            <div id="user-content-habits" class="hidden space-y-4">
+                <h3 class="font-bold text-gray-900 border-l-4 border-green-500 pl-3">Ibadah & Rutinitas</h3>
+                <div id="habits-list" class="grid gap-3">
+                    <!-- Habits will be injected -->
+                </div>
+            </div>
+
+            <!-- 4. Kontak -->
+            <div id="user-content-kontak" class="hidden space-y-6">
+                <div>
+                    <h3 class="font-bold text-gray-900 border-l-4 border-red-400 pl-3 mb-3">Guru</h3>
+                    <div id="kontak-guru" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-900 border-l-4 border-red-400 pl-3 mb-3">Teman</h3>
+                    <div id="kontak-teman" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Group CTA -->
+            <div class="pt-8 mb-10">
+                <a href="https://chat.whatsapp.com/example" target="_blank" class="bg-green-500 hover:bg-green-600 text-white p-4 rounded-2xl flex items-center justify-center gap-4 shadow-lg transition-all transform hover:scale-105">
+                    <i class="fab fa-whatsapp text-4xl"></i>
+                    <div class="text-left">
+                        <div class="font-bold text-lg leading-tight">Diskusi Kelompok</div>
+                        <div class="text-xs opacity-90">Klik buat join grup WA</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <!-- (Optional: For adding tasks/notes) -->
+
+    <!-- Scripts -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="admin.js"></script>
+    <script type="module" src="user.js"></script>
+    <script>
+        // Tab switching logic for Admin (simple)
+        document.getElementById('tab-users-btn')?.addEventListener('click', () => {
+            document.getElementById('content-users').classList.remove('hidden');
+            document.getElementById('content-monitoring').classList.add('hidden');
+            document.getElementById('tab-users-btn').classList.add('tab-active');
+            document.getElementById('tab-users-btn').classList.remove('text-gray-500');
+            document.getElementById('tab-monitoring-btn').classList.add('text-gray-500');
+            document.getElementById('tab-monitoring-btn').classList.remove('tab-active');
+        });
+
+        document.getElementById('tab-monitoring-btn')?.addEventListener('click', () => {
+            document.getElementById('content-users').classList.add('hidden');
+            document.getElementById('content-monitoring').classList.remove('hidden');
+            document.getElementById('tab-users-btn').classList.remove('tab-active');
+            document.getElementById('tab-users-btn').classList.add('text-gray-500');
+            document.getElementById('tab-monitoring-btn').classList.remove('text-gray-500');
+            document.getElementById('tab-monitoring-btn').classList.add('tab-active');
+        });
+
+        // Tab switching logic for User
+        const userTabs = ['jadwal', 'tasks', 'habits', 'kontak'];
+        userTabs.forEach(tab => {
+            document.getElementById(`btn-tab-${tab}`)?.addEventListener('click', () => {
+                userTabs.forEach(t => {
+                    document.getElementById(`user-content-${t}`).classList.add('hidden');
+                    const btn = document.getElementById(`btn-tab-${t}`);
+                    btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                    btn.classList.add('bg-white', 'text-gray-600', 'shadow-sm');
+                });
+                document.getElementById(`user-content-${tab}`).classList.remove('hidden');
+                const activeBtn = document.getElementById(`btn-tab-${tab}`);
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                activeBtn.classList.remove('bg-white', 'text-gray-600', 'shadow-sm');
+            });
+        });
+    </script>
+</body>
+</html>
