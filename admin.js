@@ -174,32 +174,68 @@ function renderProgressData(data, tasksList, habitsList, lastUpdatedEl) {
 
 function renderMonitoringList(container, items) {
     container.innerHTML = '';
+    if (!items || items.length === 0) {
+        container.innerHTML = '<li class="text-gray-400 text-sm py-2">Belum ada data.</li>';
+        return;
+    }
     items.forEach(item => {
         const li = document.createElement('li');
-        li.className = 'p-3 hover:bg-gray-50 rounded-xl border border-gray-50 space-y-2 mb-2';
-        
-        let details = '';
-        if (item.type === 'multi') {
-            details = `<div class="flex gap-1 mt-1">
-                ${item.items.map(sub => `
-                    <span class="px-1.5 py-0.5 rounded text-[8px] font-bold ${sub.done ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}">${sub.name}</span>
-                `).join('')}
-            </div>`;
+        li.className = 'p-3 rounded-xl border border-gray-100 space-y-2 mb-2 bg-white';
+
+        // Status icon
+        const isDone = item.done || item.completed;
+        const statusIcon = isDone
+            ? '<i class="fas fa-check-circle text-green-500 text-lg"></i>'
+            : '<i class="fas fa-circle text-gray-200 text-lg"></i>';
+
+        // Photo thumbnail
+        const photoHtml = item.photo
+            ? `<img src="${item.photo}" class="w-8 h-8 rounded object-cover border cursor-pointer" onclick="window.viewImage('${item.photo}')">`
+            : '';
+
+        // Breakdown for Shalat 5 Waktu
+        let breakdownHtml = '';
+        if (item.type === 'multi' && item.items) {
+            const doneCount = item.items.filter(s => s.done).length;
+            breakdownHtml = `
+                <div class="flex flex-wrap gap-1 mt-1">
+                    ${item.items.map(sub => `
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1
+                            ${sub.done ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}">
+                            ${sub.done ? '✅' : '⬜'} ${sub.name}
+                        </span>
+                    `).join('')}
+                </div>
+                <p class="text-[10px] text-indigo-500 font-semibold">${doneCount}/5 Waktu Shalat</p>
+            `;
         }
-        
-        if (item.type === 'note' && item.notes) {
-            details = `<div class="text-[10px] text-indigo-500 font-bold bg-indigo-50 p-1 rounded mt-1 italic">Note: ${item.notes}</div>`;
+
+        // Breakdown for Quran notes
+        if (item.type === 'note') {
+            breakdownHtml = item.notes
+                ? `<div class="text-[11px] text-indigo-600 bg-indigo-50 px-2 py-1 rounded mt-1">📖 ${item.notes}</div>`
+                : `<div class="text-[10px] text-gray-400 italic mt-1">Belum ada catatan ayat</div>`;
+        }
+
+        // Date info for tasks
+        let dateHtml = '';
+        if (item.givenDate || item.dueDate) {
+            dateHtml = `<div class="flex gap-2 text-[10px] mt-1">
+                ${item.givenDate ? `<span class="text-gray-400">Diberikan: ${item.givenDate}</span>` : ''}
+                ${item.dueDate ? `<span class="bg-red-50 text-red-400 px-1.5 py-0.5 rounded-full font-bold">Kumpul: ${item.dueDate}</span>` : ''}
+            </div>`;
         }
 
         li.innerHTML = `
             <div class="flex items-center justify-between">
-                <span class="text-sm font-bold text-gray-700">${item.name || item.title}</span>
+                <span class="text-sm font-bold text-gray-800">${item.name || item.title || '-'}</span>
                 <div class="flex items-center gap-2">
-                    ${item.photo ? `<i class="fas fa-image text-indigo-500 cursor-pointer" onclick="window.viewImage('${item.photo}')"></i>` : ''}
-                    <i class="fas ${item.done || item.completed ? 'fa-check-circle text-green-500' : 'fa-times-circle text-gray-300'}"></i>
+                    ${photoHtml}
+                    ${statusIcon}
                 </div>
             </div>
-            ${details}
+            ${breakdownHtml}
+            ${dateHtml}
         `;
         container.appendChild(li);
     });
