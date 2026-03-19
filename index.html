@@ -93,6 +93,9 @@
                 <button id="tab-monitoring-btn" class="flex-1 py-4 text-center text-gray-500 transition-all">
                     <i class="fas fa-chart-line mr-2"></i> Monitoring Ortu
                 </button>
+                <button id="tab-config-btn" class="flex-1 py-4 text-center text-gray-500 transition-all">
+                    <i class="fas fa-cog mr-2"></i> Pengaturan
+                </button>
             </div>
 
             <!-- Tab Content: User Management -->
@@ -101,11 +104,12 @@
                 <div class="bg-white rounded-xl card-shadow overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NAMA</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KELAS</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">AKSI</th>
+                                    </tr>
                         </thead>
                         <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
                             <!-- User rows will be injected here -->
@@ -125,8 +129,31 @@
                             <option value="Rabu">Rabu</option>
                             <option value="Kamis">Kamis</option>
                             <option value="Jumat">Jumat</option>
-                            <option value="Sabtu">Sabtu</option>
-                            <option value="Minggu">Minggu</option>
+                        </select>
+                        <select id="input-grade-level" class="p-2 border rounded-lg">
+                            <option value="Semua">Semua Kelas</option>
+                            <optgroup label="SD">
+                                <option value="Kelas 1">Kelas 1</option>
+                                <option value="Kelas 2">Kelas 2</option>
+                                <option value="Kelas 3">Kelas 3</option>
+                                <option value="Kelas 4">Kelas 4</option>
+                                <option value="Kelas 5">Kelas 5</option>
+                                <option value="Kelas 6">Kelas 6</option>
+                            </optgroup>
+                            <optgroup label="SMP">
+                                <option value="Kelas 7">Kelas 7</option>
+                                <option value="Kelas 8">Kelas 8</option>
+                                <option value="Kelas 9">Kelas 9</option>
+                            </optgroup>
+                            <optgroup label="SMA">
+                                <option value="Kelas 10">Kelas 10</option>
+                                <option value="Kelas 11">Kelas 11</option>
+                                <option value="Kelas 12">Kelas 12</option>
+                            </optgroup>
+                        </select>
+                        <select id="input-semester" class="p-2 border rounded-lg">
+                            <option value="Ganjil">Semester Ganjil</option>
+                            <option value="Genap">Semester Genap</option>
                         </select>
                         <input type="text" id="input-subject" placeholder="Nama Pelajaran" class="p-2 border rounded-lg">
                         <input type="text" id="input-teacher" placeholder="Guru" class="p-2 border rounded-lg">
@@ -244,6 +271,26 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tab Content: Global Configuration -->
+            <div id="content-global-config" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="font-bold text-gray-900 mb-4">Pengaturan Global Aplikasi</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="active-semester-select" class="block text-sm font-medium text-gray-700 mb-2">Semester Aktif</label>
+                            <select id="active-semester-select" class="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
+                                <option value="Ganjil">Ganjil</option>
+                                <option value="Genap">Genap</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="save-global-config-btn" class="w-full bg-indigo-600 text-white rounded-xl p-3 font-bold shadow-lg hover:bg-indigo-700 transition-all">Simpan Pengaturan</button>
+                        </div>
+                    </div>
+                    <p id="global-config-status" class="text-xs text-green-600 font-bold mt-3 text-center hidden">✅ Pengaturan berhasil disimpan!</p>
+                </div>
+            </div>
         </section>
 
         <!-- User Dashboard Section -->
@@ -336,8 +383,38 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h3 class="font-bold text-gray-800 mb-4 text-center">Tambah Jadwal Pelajaran</h3>
                     <div class="grid grid-cols-1 gap-4">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
+                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Tingkat</label>
+                                <select id="input-grade-level" class="p-3 border border-gray-200 rounded-xl outline-none bg-white w-full">
+                                    <optgroup label="SD">
+                                        <option value="Kelas 1">Kelas 1</option>
+                                        <option value="Kelas 2">Kelas 2</option>
+                                        <option value="Kelas 3">Kelas 3</option>
+                                        <option value="Kelas 4">Kelas 4</option>
+                                        <option value="Kelas 5">Kelas 5</option>
+                                        <option value="Kelas 6">Kelas 6</option>
+                                    </optgroup>
+                                    <optgroup label="SMP">
+                                        <option value="Kelas 7">Kelas 7</option>
+                                        <option value="Kelas 8">Kelas 8</option>
+                                        <option value="Kelas 9">Kelas 9</option>
+                                    </optgroup>
+                                    <optgroup label="SMA">
+                                        <option value="Kelas 10">Kelas 10</option>
+                                        <option value="Kelas 11">Kelas 11</option>
+                                        <option value="Kelas 12">Kelas 12</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Semester</label>
+                                <select id="input-semester" class="p-3 border border-gray-200 rounded-xl outline-none bg-white w-full">
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
                                 <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Hari</label>
                                 <select id="user-input-day" class="p-3 border border-gray-200 rounded-xl outline-none bg-indigo-50 w-full font-bold">
                                     <option value="Senin">Senin</option>
@@ -347,11 +424,6 @@
                                     <option value="Jumat">Jumat</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Mata Pelajaran (List Guru)</label>
-                                <select id="user-select-subject-teacher" class="p-3 border border-gray-200 rounded-xl outline-none bg-white w-full">
-                                    <option value="">Pilih Mata Pelajaran...</option>
-                                </select>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">

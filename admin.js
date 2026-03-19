@@ -7,6 +7,8 @@ export function initAdmin() {
     loadScheduleManager();
     loadTeacherManager();
     loadParentalMonitoring();
+    initAppConfig();
+    initAdminTabs();
     window.viewImage = (src) => {
         const viewer = document.createElement('div');
         viewer.className = 'fixed inset-0 bg-black bg-opacity-90 z-[100] flex items-center justify-center p-4';
@@ -47,9 +49,18 @@ function loadUsers() {
                         ${user.role}
                     </span>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">
+                    ${user.grade || '-'}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     ${user.role === 'Pending' ? `
-                        <button onclick="window.updateUserStatus('${docSnap.id}', 'Approved')" class="text-indigo-600 hover:text-indigo-900">Approve</button>
+                        <select id="grade-sel-${docSnap.id}" class="text-xs border rounded p-1">
+                            <option value="">Set Kelas...</option>
+                            <optgroup label="SD"><option>Kelas 1</option><option>Kelas 2</option><option>Kelas 3</option><option>Kelas 4</option><option>Kelas 5</option><option>Kelas 6</option></optgroup>
+                            <optgroup label="SMP"><option>Kelas 7</option><option>Kelas 8</option><option>Kelas 9</option></optgroup>
+                            <optgroup label="SMA"><option>Kelas 10</option><option>Kelas 11</option><option>Kelas 12</option></optgroup>
+                        </select>
+                        <button onclick="window.approveWithGrade('${docSnap.id}')" class="text-indigo-600 hover:text-indigo-900">Approve</button>
                     ` : ''}
                     ${user.role === 'Approved' ? `
                         <button onclick="window.updateUserStatus('${docSnap.id}', 'Admin')" class="text-purple-600 hover:text-purple-900">Make Admin</button>
@@ -342,6 +353,8 @@ function loadScheduleManager() {
                 teacher,
                 time: fullTime,
                 day,
+                level: document.getElementById('input-grade-level').value,
+                semester: document.getElementById('input-semester').value,
                 userId: 'common',
                 createdAt: new Date()
             });
@@ -433,3 +446,55 @@ window.deleteUser = async (id) => {
 window.updateUserStatus = async (id, status) => {
     await updateDoc(doc(db, "users", id), { role: status });
 };
+
+window.approveWithGrade = async (id) => {
+    const gradeSel = document.getElementById(`grade-sel-${id}`);
+    const grade = gradeSel ? gradeSel.value : null;
+    if (!grade) { alert('Pilih kelas dulu!'); return; }
+    await updateDoc(doc(db, "users", id), { role: 'Approved', grade: grade });
+};
+
+function initAdminTabs() {
+    const tabs = ['users', 'manage-jadwal', 'manage-guru', 'monitoring', 'config'];
+    tabs.forEach(tab => {
+        const btn = document.getElementById(`tab-${tab}-btn`);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                // Hide all contents
+                tabs.forEach(t => {
+                    const content = document.getElementById(`content-${t}`);
+                    if (content) content.classList.add('hidden');
+                    const b = document.getElementById(`tab-${t}-btn`);
+                    if (b) b.classList.remove('tab-active');
+                    if (b) b.classList.add('text-gray-500');
+                });
+                // Show current
+                const activeContent = document.getElementById(`content-${tab}`);
+                if (activeContent) activeContent.classList.remove('hidden');
+                btn.classList.add('tab-active');
+                btn.classList.remove('text-gray-500');
+            });
+        }
+    });
+}
+
+async function initAppConfig() {
+    const semesterSelect = document.getElementById('active-semester-select');
+    const saveBtn = document.getElementById('save-global-config-btn');
+    const statusMsg = document.getElementById('global-config-status');
+
+    if (!semesterSelect || !saveBtn) return;
+
+    // Load current config
+    const configRef = doc(db, 'config', 'app');
+    const configSnap = await getDoc(configRef);
+    if (configSnap.exists()) {
+        semesterSelect.value = configSnap.data().activeSemester || 'Ganjil';
+    }
+
+    saveBtn.onclick = async () => {
+        await setDoc(configRef, { activeSemester: semesterSelect.value }, { merge: true });
+        statusMsg.classList.remove('hidden');
+        setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+    };
+}

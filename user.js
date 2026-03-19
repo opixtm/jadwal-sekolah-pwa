@@ -3,8 +3,10 @@ import { db, auth } from './firebase-config.js';
 import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection, query, where, orderBy, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentUserId = null;
+let userGrade = null;
+let activeSemester = "Ganjil";
 
-export function initUser() {
+export async function initUser() {
     console.log('User Module Initialized');
     currentUserId = auth.currentUser.uid;
 
@@ -17,13 +19,26 @@ export function initUser() {
     const habitDate = document.getElementById('today-habit-date');
     if (habitDate) habitDate.textContent = shortDate;
 
+    // Fetch User Profile (Grade)
+    const userSnap = await getDoc(doc(db, 'users', currentUserId));
+    if (userSnap.exists()) {
+        userGrade = userSnap.data().grade;
+        document.getElementById('hello-name').textContent = userSnap.data().displayName || 'Sobat';
+    }
+
+    // Fetch Active Semester
+    const configSnap = await getDoc(doc(db, 'config', 'app'));
+    if (configSnap.exists()) {
+        activeSemester = configSnap.data().activeSemester || 'Ganjil';
+    }
+
+    loadFlashNote();
     loadSchedule();
     loadExams();
     loadTasks();
     loadHabits();
     loadContacts();
     loadUserScheduleManager();
-    loadFlashNote();
     initModals();
 }
 
@@ -107,7 +122,16 @@ function loadSchedule() {
             // Local filter for Common OR specific User
             const docs = snapshot.docs.filter(d => {
                 const data = d.data();
-                return data.userId === 'common' || data.userId === currentUserId;
+                // If it's my personal schedule, show it
+                if (data.userId === currentUserId) return true;
+                
+                // If it's common (school) schedule, check if it matches my level/grade and current semester
+                if (data.userId === 'common') {
+                    const gradeMatch = !data.level || data.level === 'Semua' || data.level === userGrade;
+                    const semesterMatch = !data.semester || data.semester === activeSemester;
+                    return gradeMatch && semesterMatch;
+                }
+                return false;
             });
 
             // Sort by time locally
