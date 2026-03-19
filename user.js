@@ -505,24 +505,23 @@ window.viewImage = (src) => {
 function loadUserScheduleManager() {
     const tableBody = document.getElementById('user-manage-table-body');
     const saveBtn = document.getElementById('user-save-jadwal-btn');
-    const subjectSelect = document.getElementById('user-select-subject-teacher');
+    const teacherDatalist = document.getElementById('teacher-list');
 
-    if (!tableBody || !saveBtn || !subjectSelect) return;
+    if (!tableBody || !saveBtn) return;
 
-    // 1. Populate Subject/Teacher Dropdown from Database Guru
+    // 1. Populate Teacher Datalist from Contacts (Admin-set teachers)
     onSnapshot(collection(db, "contacts"), (snapshot) => {
-        const currentVal = subjectSelect.value;
-        subjectSelect.innerHTML = '<option value="">Pilih Mata Pelajaran...</option>';
-        snapshot.forEach((docSnap) => {
-            const item = docSnap.data();
-            if (item.type === 'guru') {
-                const opt = document.createElement('option');
-                opt.value = `${item.subject}|${item.name}`; // Store both subject and teacher
-                opt.textContent = `${item.subject} (${item.name})`;
-                subjectSelect.appendChild(opt);
-            }
-        });
-        subjectSelect.value = currentVal;
+        if (teacherDatalist) {
+            teacherDatalist.innerHTML = '';
+            snapshot.forEach((docSnap) => {
+                const item = docSnap.data();
+                if (item.type === 'guru') {
+                    const opt = document.createElement('option');
+                    opt.value = item.name;
+                    teacherDatalist.appendChild(opt);
+                }
+            });
+        }
     });
 
     // 2. Listen to MY schedules (only those I created)
@@ -567,17 +566,17 @@ function loadUserScheduleManager() {
     });
 
     saveBtn.onclick = async () => {
-        const subTeacherVal = subjectSelect.value;
+        const subject = document.getElementById('user-input-subject').value;
+        const teacher = document.getElementById('user-input-teacher').value;
         const timeStart = document.getElementById('user-input-time-start').value;
         const timeEnd = document.getElementById('user-input-time-end').value;
         const day = document.getElementById('user-input-day').value;
 
-        if (!subTeacherVal || !timeStart || !timeEnd) {
-            alert("Harap pilih Mata Pelajaran dan isi Jam!");
+        if (!subject || !teacher || !timeStart || !timeEnd) {
+            alert("Harap isi Mata Pelajaran, Nama Guru, dan Jam!");
             return;
         }
 
-        const [subject, teacher] = subTeacherVal.split('|');
         const fullTime = `${timeStart} - ${timeEnd}`;
 
         try {
@@ -590,7 +589,8 @@ function loadUserScheduleManager() {
                 createdAt: serverTimestamp()
             });
             // Reset inputs
-            subjectSelect.value = '';
+            document.getElementById('user-input-subject').value = '';
+            document.getElementById('user-input-teacher').value = '';
             document.getElementById('user-input-time-start').value = '';
             document.getElementById('user-input-time-end').value = '';
         } catch (error) {

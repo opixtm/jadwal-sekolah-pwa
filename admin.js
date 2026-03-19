@@ -302,20 +302,19 @@ function updateUIProgress(done, total, lastUpdated) {
 function loadScheduleManager() {
     const tableBody = document.getElementById('manage-jadwal-table-body');
     const saveBtn = document.getElementById('save-jadwal-btn');
-    const subTeacherSelect = document.getElementById('input-subject-teacher');
+    const teacherDatalist = document.getElementById('teacher-list');
 
     if (!tableBody || !saveBtn) return;
 
-    // Load Teachers into dropdown
+    // Load Teachers into datalist for suggestions
     onSnapshot(query(collection(db, 'contacts'), where('type', '==', 'guru')), (snap) => {
-        if (subTeacherSelect) {
-            subTeacherSelect.innerHTML = '<option value="">Pilih Pelajaran & Guru...</option>';
+        if (teacherDatalist) {
+            teacherDatalist.innerHTML = '';
             snap.forEach(d => {
                 const g = d.data();
                 const opt = document.createElement('option');
-                opt.value = `${g.subject}|${g.name}`;
-                opt.textContent = `${g.subject} - ${g.name}`;
-                subTeacherSelect.appendChild(opt);
+                opt.value = g.name;
+                teacherDatalist.appendChild(opt);
             });
         }
     });
@@ -348,19 +347,19 @@ function loadScheduleManager() {
     });
 
     saveBtn.onclick = async () => {
-        const subTeacherVal = document.getElementById('input-subject-teacher').value;
+        const subject = document.getElementById('input-subject').value;
+        const teacher = document.getElementById('input-teacher').value;
         const timeStart = document.getElementById('input-time-start').value;
         const timeEnd = document.getElementById('input-time-end').value;
         const day = document.getElementById('input-day').value;
         const level = document.getElementById('input-grade-level').value;
         const semester = document.getElementById('input-semester').value;
 
-        if (!subTeacherVal || !timeStart || !timeEnd) {
-            alert("Harap pilih pelajaran dan isi jam!");
+        if (!subject || !teacher || !timeStart || !timeEnd) {
+            alert("Harap isi semua kolom!");
             return;
         }
 
-        const [subject, teacher] = subTeacherVal.split('|');
         const fullTime = `${timeStart} - ${timeEnd}`;
 
         try {
@@ -375,9 +374,10 @@ function loadScheduleManager() {
                 createdAt: serverTimestamp()
             });
             // Reset
+            document.getElementById('input-subject').value = '';
+            document.getElementById('input-teacher').value = '';
             document.getElementById('input-time-start').value = '';
-            document.getElementById('input-time-end').value = ''; // Corrected from user-input-time-end
-            if (subTeacherSelect) subTeacherSelect.value = ''; // Clear the dropdown
+            document.getElementById('input-time-end').value = '';
         } catch (error) {
             console.error("Error adding schedule:", error);
         }
@@ -387,6 +387,8 @@ function loadScheduleManager() {
 // --- Teacher Management ---
 function loadTeacherManager() {
     const tableBody = document.getElementById('manage-guru-table-body');
+    const saveBtn = document.getElementById('save-guru-btn');
+
     if (!tableBody || !saveBtn) return;
 
     onSnapshot(collection(db, "contacts"), (snapshot) => {
@@ -411,9 +413,13 @@ function loadTeacherManager() {
     });
 
     saveBtn.onclick = async () => {
-        const name = document.getElementById('guru-name').value;
-        const subject = document.getElementById('guru-subject').value;
-        const phone = document.getElementById('guru-phone').value;
+        const nameInput = document.getElementById('guru-name');
+        const subjectInput = document.getElementById('guru-subject');
+        const phoneInput = document.getElementById('guru-phone');
+
+        const name = nameInput.value;
+        const subject = subjectInput.value;
+        const phone = phoneInput.value;
 
         if (!name || !subject || !phone) {
             alert("Harap isi semua kolom!");
@@ -426,11 +432,11 @@ function loadTeacherManager() {
                 subject,
                 phone,
                 type: 'guru',
-                createdAt: new Date()
+                createdAt: serverTimestamp()
             });
-            document.getElementById('guru-name').value = '';
-            document.getElementById('guru-subject').value = '';
-            document.getElementById('guru-phone').value = '';
+            nameInput.value = '';
+            subjectInput.value = '';
+            phoneInput.value = '';
         } catch (error) {
             console.error("Error adding guru:", error);
         }
