@@ -287,15 +287,19 @@ function renderMonitoringList(container, items) {
 
 function updateUIProgress(done, total, lastUpdated) {
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-    document.getElementById('progress-bar-inner').style.width = `${percent}%`;
-    document.getElementById('progress-percent').textContent = `${percent}%`;
-    document.getElementById('progress-ratio').textContent = `${done}/${total} Selesai`;
+    const bar = document.getElementById('progress-bar-inner');
+    const pct = document.getElementById('progress-percent');
+    const ratio = document.getElementById('progress-ratio');
+
+    if (bar) bar.style.width = `${percent}%`;
+    if (pct) pct.textContent = `${percent}%`;
+    if (ratio) ratio.textContent = `${done}/${total} Selesai`;
     
-    // Add timestamp display if exists
-    let tsLabel = document.getElementById('progress-timestamp');
-    if (!tsLabel) {
+    // Optional timestamp display
+    if (lastUpdated) {
+        let tsLabel = document.getElementById('progress-timestamp');
+        if (tsLabel) tsLabel.textContent = `Update Terakhir: ${lastUpdated}`;
     }
-    tsLabel.textContent = `Update Terakhir: ${lastUpdated}`;
 }
 
 // --- Schedule Management ---
