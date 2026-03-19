@@ -1,7 +1,7 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Your actual Firebase configuration
 const firebaseConfig = {
@@ -16,7 +16,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+// Use initializeFirestore with force long polling to fix CORS/Listen errors
+import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true
+});
+
 const provider = new GoogleAuthProvider();
 
 export { auth, db, provider };
