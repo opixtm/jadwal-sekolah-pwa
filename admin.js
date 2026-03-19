@@ -87,59 +87,89 @@ window.removeUser = async (uid) => {
 
 function loadParentalMonitoring() {
     const childSelect = document.getElementById('child-select');
+    const datePicker = document.getElementById('monitoring-date-picker');
     const monitoringData = document.getElementById('monitoring-data');
-    const q = query(collection(db, 'users'), where('role', '==', 'Approved'));
 
+    // Default hari ini
+    const todayStr = new Date().toISOString().split('T')[0];
+    datePicker.value = todayStr;
+
+    // Load approved users into dropdown
+    const q = query(collection(db, 'users'), where('role', '==', 'Approved'));
     onSnapshot(q, (snapshot) => {
         childSelect.innerHTML = '<option value="">Pilih...</option>';
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
             const option = document.createElement('option');
-            option.value = user.uid;
-            option.textContent = user.displayName;
+            option.value = docSnap.id;
+            option.textContent = user.displayName || user.email;
             childSelect.appendChild(option);
         });
     });
 
+    let currentUid = null;
+
+    function loadForDate() {
+        if (!currentUid) return;
+        const date = datePicker.value || todayStr;
+        monitoringData.classList.remove('hidden');
+        subscribeToChildProgress(currentUid, date);
+    }
+
     childSelect.addEventListener('change', (e) => {
-        const uid = e.target.value;
-        if (uid) {
-            monitoringData.classList.remove('hidden');
-            subscribeToChildProgress(uid);
-        } else {
-            monitoringData.classList.add('hidden');
+        currentUid = e.target.value;
+        if (currentUid) loadForDate();
+        else monitoringData.classList.add('hidden');
+    });
+
+    datePicker.addEventListener('change', () => loadForDate());
+}
+
+function subscribeToChildProgress(uid, date) {
+    const tasksList = document.getElementById('monitoring-tasks-list');
+    const habitsList = document.getElementById('monitoring-habits-list');
+    const dateLabel = document.getElementById('monitoring-date-label');
+    const lastUpdatedEl = document.getElementById('monitoring-last-updated');
+
+    // Format tanggal untuk label
+    const displayDate = new Date(date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    if (dateLabel) dateLabel.textContent = displayDate;
+
+    // Coba ambil dari subcollection log per tanggal dulu, fallback ke root doc
+    const logRef = doc(db, 'progress', uid, 'logs', date);
+    onSnapshot(logRef, (docSnap) => {
+        if (!docSnap.exists()) {
+            // Fallback: coba root doc (data lama)
+            onSnapshot(doc(db, 'progress', uid), (rootSnap) => {
+                if (!rootSnap.exists()) {
+                    tasksList.innerHTML = '<li class="text-gray-400 text-sm py-2">Belum ada data untuk tanggal ini.</li>';
+                    habitsList.innerHTML = '<li class="text-gray-400 text-sm py-2">Belum ada data untuk tanggal ini.</li>';
+                    updateUIProgress(0, 0);
+                    return;
+                }
+                renderProgressData(rootSnap.data(), tasksList, habitsList, lastUpdatedEl);
+            });
+            return;
         }
+        renderProgressData(docSnap.data(), tasksList, habitsList, lastUpdatedEl);
     });
 }
 
-function subscribeToChildProgress(uid) {
-    const tasksList = document.getElementById('monitoring-tasks-list');
-    const habitsList = document.getElementById('monitoring-habits-list');
-    const progressBar = document.getElementById('progress-bar-inner');
-    const progressPercent = document.getElementById('progress-percent');
-    const progressRatio = document.getElementById('progress-ratio');
+function renderProgressData(data, tasksList, habitsList, lastUpdatedEl) {
+    const tasks = data.tasks || [];
+    const habits = data.habits || [];
 
-    onSnapshot(doc(db, 'progress', uid), (docSnap) => {
-        if (!docSnap.exists()) {
-            tasksList.innerHTML = '<li>Belum ada data.</li>';
-            habitsList.innerHTML = '<li>Belum ada data.</li>';
-            updateUIProgress(0, 0);
-            return;
-        }
+    renderMonitoringList(tasksList, tasks);
+    renderMonitoringList(habitsList, habits);
 
-        const data = docSnap.data();
-        const tasks = data.tasks || [];
-        const habits = data.habits || [];
+    const total = tasks.length + habits.length;
+    const done = [...tasks, ...habits].filter(item => item.done || item.completed).length;
+    const lastUpdated = data.updatedAt ? new Date(data.updatedAt.toDate()).toLocaleString('id-ID') : null;
 
-        renderMonitoringList(tasksList, tasks);
-        renderMonitoringList(habitsList, habits);
-
-        const total = tasks.length + habits.length;
-        const done = [...tasks, ...habits].filter(item => item.done || item.completed).length;
-        const lastUpdated = data.updatedAt ? new Date(data.updatedAt.toDate()).toLocaleString('id-ID') : 'Belum update';
-        
-        updateUIProgress(done, total, lastUpdated);
-    });
+    updateUIProgress(done, total, lastUpdated);
+    if (lastUpdatedEl && lastUpdated) {
+        lastUpdatedEl.textContent = 'Terakhir diperbarui: ' + lastUpdated;
+    }
 }
 
 function renderMonitoringList(container, items) {

@@ -155,10 +155,12 @@ async function loadTasks() {
         if (tasks.length === 0) {
             tasksList.innerHTML = '<p class="text-gray-400 text-center py-4">Belum ada tugas.</p>';
         } else {
-            tasksList.innerHTML = ''; // Clear existing content
+            tasksList.innerHTML = '';
             tasks.forEach((task, index) => {
                 const li = document.createElement('li');
                 li.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3';
+                const givenDate = task.givenDate ? `<span class="text-gray-400">Diberikan: ${task.givenDate}</span>` : '';
+                const dueDate = task.dueDate ? `<span class="bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Kumpul: ${task.dueDate}</span>` : '';
                 li.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
@@ -166,22 +168,21 @@ async function loadTasks() {
                                 onchange="window.toggleTask(${index})"
                                 class="w-6 h-6 rounded-lg text-indigo-600 focus:ring-indigo-500 border-gray-300">
                             <div>
-                                <div class="font-bold text-gray-900 ${task.completed ? 'line-through opacity-50' : ''}">${task.title}</div>
-                                <div class="text-[10px] flex gap-2">
-                                    <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${task.category}</span>
-                                    <span class="text-gray-400">Due: ${task.dueDate || '-'}</span>
+                                <div class="font-bold text-gray-900 ${task.completed ? 'line-through opacity-50' : ''}">${task.title || task.name || '-'}</div>
+                                <div class="text-[10px] flex flex-wrap gap-2 mt-1">
+                                    <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${task.category || ''}</span>
+                                    ${givenDate}
+                                    ${dueDate}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="pt-2 flex items-center justify-between border-t border-gray-50 mt-2">
-                        <div class="flex items-center gap-2">
-                            <label class="cursor-pointer text-indigo-500 hover:text-indigo-700">
-                                <i class="fas fa-camera"></i> <span class="text-[10px] font-bold">BUKTI FOTO</span>
-                                <input type="file" accept="image/*" class="hidden" onchange="window.uploadTaskPhoto(${index}, this)">
-                            </label>
-                            ${task.photo ? `<img src="${task.photo}" class="w-8 h-8 rounded object-cover border" onclick="window.viewImage('${task.photo}')">` : ''}
-                        </div>
+                    <div class="pt-2 flex items-center gap-2 border-t border-gray-50 mt-2">
+                        <label class="cursor-pointer text-indigo-500 hover:text-indigo-700">
+                            <i class="fas fa-camera"></i> <span class="text-[10px] font-bold">BUKTI FOTO</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="window.uploadTaskPhoto(${index}, this)">
+                        </label>
+                        ${task.photo ? `<img src="${task.photo}" class="w-8 h-8 rounded object-cover border" onclick="window.viewImage('${task.photo}')">` : ''}
                     </div>
                 `;
                 tasksList.appendChild(li);
@@ -192,31 +193,35 @@ async function loadTasks() {
 
 async function loadHabits() {
     const habitsList = document.getElementById('habits-list');
-    const docRef = doc(db, 'progress', currentUserId);
+    const today = getTodayDate();
+    const logRef = todayLogRef();
+    const rootRef = doc(db, 'progress', currentUserId);
     
-    // Initialize default habits if not exists
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists() || !docSnap.data().habits) {
-        const defaultHabits = [
-            { name: "Shalat 5 Waktu", items: [
-                { id: "subuh", name: "Subuh", done: false },
-                { id: "dzuhur", name: "Dzuhur", done: false },
-                { id: "ashar", name: "Ashar", done: false },
-                { id: "maghrib", name: "Maghrib", done: false },
-                { id: "isya", name: "Isya", done: false }
-            ], type: 'multi', photo: null, done: false },
-            { name: "Membaca Al-Quran", done: false, type: 'note', notes: '', photo: null },
-            { name: "Membereskan Rumah", done: false, type: 'normal', photo: null },
-            { name: "Mandi & Gosok Gigi", done: false, type: 'normal', photo: null }
-        ];
-        await setDoc(docRef, { habits: defaultHabits }, { merge: true });
+    const defaultHabits = [
+        { name: "Shalat 5 Waktu", type: 'multi', items: [
+            { id: "subuh", name: "Subuh", done: false },
+            { id: "dzuhur", name: "Dzuhur", done: false },
+            { id: "ashar", name: "Ashar", done: false },
+            { id: "maghrib", name: "Maghrib", done: false },
+            { id: "isya", name: "Isya", done: false }
+        ], photo: null, done: false },
+        { name: "Membaca Al-Quran", done: false, type: 'note', notes: '', photo: null },
+        { name: "Membereskan Rumah", done: false, type: 'normal', photo: null },
+        { name: "Mandi & Gosok Gigi", done: false, type: 'normal', photo: null }
+    ];
+
+    // Ensure today's log exists
+    const todaySnap = await getDoc(logRef);
+    if (!todaySnap.exists() || !todaySnap.data().habits) {
+        await setDoc(logRef, { habits: defaultHabits, date: today, updatedAt: serverTimestamp() }, { merge: true });
     }
 
-    onSnapshot(docRef, (snap) => {
+    onSnapshot(logRef, (snap) => {
         if (!habitsList) return;
         habitsList.innerHTML = '';
+        if (!snap.exists()) return;
         const data = snap.data();
-        const habits = data.habits || [];
+        const habits = data.habits || defaultHabits;
 
         habits.forEach((habit, hIdx) => {
             const card = document.createElement('div');
@@ -230,10 +235,13 @@ async function loadHabits() {
             </div>`;
 
             if (habit.type === 'multi') {
-                contentHtml += `<div class="grid grid-cols-5 gap-2 pt-2">
-                    ${habit.items.map((item, iIdx) => `
+                const doneCount = (habit.items || []).filter(i => i.done).length;
+                contentHtml += `
+                <p class="text-xs text-indigo-600 font-semibold">${doneCount}/5 Waktu ✅</p>
+                <div class="grid grid-cols-5 gap-2 pt-1">
+                    ${(habit.items || []).map((item, iIdx) => `
                         <button onclick="window.toggleMultiHabit(${hIdx}, ${iIdx})" 
-                            class="p-2 rounded-xl text-[10px] font-bold transition-all border ${item.done ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-400 border-gray-100'}">
+                            class="p-2 rounded-xl text-[10px] font-bold transition-all border ${item.done ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 text-gray-400 border-gray-100 hover:border-indigo-300'}">
                             ${item.name}
                         </button>
                     `).join('')}
@@ -242,26 +250,23 @@ async function loadHabits() {
 
             if (habit.type === 'note') {
                 contentHtml += `
-                    <div class="flex gap-2 items-center">
-                        <input type="text" placeholder="Catatan (Ex: Al-Baqarah 1-10)" 
-                            value="${habit.notes || ''}" 
+                    <div class="flex gap-2 items-start">
+                        <textarea placeholder="Ayat yang dibaca (Ex: Al-Baqarah 1-5)" 
+                            rows="2"
                             onblur="window.updateHabitNotes(${hIdx}, this.value)"
-                            class="flex-1 p-2 bg-gray-50 border-none rounded-lg text-xs outline-none">
-                        <input type="checkbox" ${habit.done ? 'checked' : ''} onchange="window.toggleHabit(${hIdx})" class="w-6 h-6 rounded-lg text-indigo-600">
+                            class="flex-1 p-2 bg-gray-50 border border-gray-100 rounded-lg text-xs outline-none resize-none">${habit.notes || ''}</textarea>
+                        <input type="checkbox" ${habit.done ? 'checked' : ''} onchange="window.toggleHabit(${hIdx})" class="w-6 h-6 rounded-lg text-indigo-600 mt-1">
                     </div>
                 `;
             }
 
-            // Photo Attachment Section
             contentHtml += `
-                <div class="pt-2 flex items-center justify-between border-t border-gray-50 mt-2">
-                    <div class="flex items-center gap-2">
-                        <label class="cursor-pointer text-indigo-500 hover:text-indigo-700">
-                            <i class="fas fa-camera"></i> <span class="text-[10px] font-bold">BUKTI FOTO</span>
-                            <input type="file" accept="image/*" class="hidden" onchange="window.uploadHabitPhoto(${hIdx}, this)">
-                        </label>
-                        ${habit.photo ? `<img src="${habit.photo}" class="w-8 h-8 rounded object-cover border" onclick="window.viewImage('${habit.photo}')">` : ''}
-                    </div>
+                <div class="pt-2 flex items-center gap-2 border-t border-gray-50 mt-2">
+                    <label class="cursor-pointer text-indigo-500 hover:text-indigo-700">
+                        <i class="fas fa-camera"></i> <span class="text-[10px] font-bold">BUKTI FOTO</span>
+                        <input type="file" accept="image/*" class="hidden" onchange="window.uploadHabitPhoto(${hIdx}, this)">
+                    </label>
+                    ${habit.photo ? `<img src="${habit.photo}" class="w-8 h-8 rounded object-cover border" onclick="window.viewImage('${habit.photo}')">` : ''}
                 </div>
             `;
 
@@ -334,12 +339,14 @@ async function initProgressDoc() {
 }
 
 window.toggleTask = async (index) => {
-    const docRef = doc(db, 'progress', currentUserId);
+    const docRef = todayLogRef();
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        const tasks = docSnap.data().tasks;
-        tasks[index].completed = !tasks[index].completed;
-        await setDoc(docRef, { tasks: tasks }, { merge: true });
+        const tasks = docSnap.data().tasks || [];
+        if (tasks[index]) {
+            tasks[index].completed = !tasks[index].completed;
+            await setDoc(docRef, { tasks, updatedAt: serverTimestamp() }, { merge: true });
+        }
     }
 };
 
@@ -348,50 +355,53 @@ window.uploadTaskPhoto = async (index, input) => {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const compressedBase64 = await compressImage(e.target.result);
-            const docRef = doc(db, 'progress', currentUserId);
+            const docRef = todayLogRef();
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                const tasks = docSnap.data().tasks;
-                tasks[index].photo = compressedBase64;
-                await setDoc(docRef, { tasks: tasks }, { merge: true });
+                const tasks = docSnap.data().tasks || [];
+                if (tasks[index]) {
+                    tasks[index].photo = compressedBase64;
+                    await setDoc(docRef, { tasks, updatedAt: serverTimestamp() }, { merge: true });
+                }
             }
         };
         reader.readAsDataURL(input.files[0]);
     }
 };
-
 window.toggleHabit = async (index) => {
-    const docRef = doc(db, 'progress', currentUserId);
+    const docRef = todayLogRef();
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        const habits = docSnap.data().habits;
-        habits[index].done = !habits[index].done;
-        await setDoc(docRef, { habits: habits }, { merge: true });
+        const habits = docSnap.data().habits || [];
+        if (habits[index]) {
+            habits[index].done = !habits[index].done;
+            await setDoc(docRef, { habits, updatedAt: serverTimestamp() }, { merge: true });
+        }
     }
 };
 
 window.toggleMultiHabit = async (hIdx, iIdx) => {
-    const docRef = doc(db, 'progress', currentUserId);
+    const docRef = todayLogRef();
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        const habits = docSnap.data().habits;
-        habits[hIdx].items[iIdx].done = !habits[hIdx].items[iIdx].done;
-        
-        // Track overall multi status
-        const allDone = habits[hIdx].items.every(i => i.done);
-        habits[hIdx].done = allDone;
-
-        await setDoc(docRef, { habits: habits }, { merge: true });
+        const habits = docSnap.data().habits || [];
+        if (habits[hIdx] && habits[hIdx].items) {
+            habits[hIdx].items[iIdx].done = !habits[hIdx].items[iIdx].done;
+            habits[hIdx].done = habits[hIdx].items.every(i => i.done);
+            await setDoc(docRef, { habits, updatedAt: serverTimestamp() }, { merge: true });
+        }
     }
 };
 
 window.updateHabitNotes = async (index, value) => {
-    const docRef = doc(db, 'progress', currentUserId);
+    const docRef = todayLogRef();
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        const habits = docSnap.data().habits;
-        habits[index].notes = value;
-        await setDoc(docRef, { habits: habits }, { merge: true });
+        const habits = docSnap.data().habits || [];
+        if (habits[index]) {
+            habits[index].notes = value;
+            await setDoc(docRef, { habits, updatedAt: serverTimestamp() }, { merge: true });
+        }
     }
 };
 
@@ -400,12 +410,14 @@ window.uploadHabitPhoto = async (index, input) => {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const compressedBase64 = await compressImage(e.target.result);
-            const docRef = doc(db, 'progress', currentUserId);
+            const docRef = todayLogRef();
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                const habits = docSnap.data().habits;
-                habits[index].photo = compressedBase64; 
-                await setDoc(docRef, { habits: habits }, { merge: true });
+                const habits = docSnap.data().habits || [];
+                if (habits[index]) {
+                    habits[index].photo = compressedBase64; 
+                    await setDoc(docRef, { habits, updatedAt: serverTimestamp() }, { merge: true });
+                }
             }
         };
         reader.readAsDataURL(input.files[0]);
