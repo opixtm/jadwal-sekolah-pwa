@@ -1,14 +1,15 @@
 // admin.js
 import { db } from './firebase-config.js';
-import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export function initAdmin() {
     console.log('Admin Module Initialized');
-    loadUserManagement();
+    loadUserList();
+    loadScheduleManager();
     loadParentalMonitoring();
 }
 
-function loadUserManagement() {
+function loadUserList() {
     const userTableBody = document.getElementById('user-table-body');
     const q = query(collection(db, 'users'));
 
@@ -143,3 +144,68 @@ function updateUIProgress(done, total) {
     document.getElementById('progress-percent').textContent = `${percent}%`;
     document.getElementById('progress-ratio').textContent = `${done}/${total} Selesai`;
 }
+
+// --- Schedule Management ---
+function loadScheduleManager() {
+    const tableBody = document.getElementById('manage-jadwal-table-body');
+    const saveBtn = document.getElementById('save-jadwal-btn');
+
+    if (!tableBody || !saveBtn) return;
+
+    // Listen to schedules collection
+    const q = query(collection(db, "schedules"), orderBy("day"), orderBy("time"));
+    onSnapshot(q, (snapshot) => {
+        tableBody.innerHTML = '';
+        snapshot.forEach((docSnap) => {
+            const item = docSnap.data();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.day}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="font-bold">${item.subject}</div>
+                    <div class="text-xs text-gray-400">${item.teacher}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.time}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="window.deleteJadwal('${docSnap.id}')" class="text-red-600 hover:text-red-900">Hapus</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    });
+
+    saveBtn.onclick = async () => {
+        const subject = document.getElementById('input-subject').value;
+        const teacher = document.getElementById('input-teacher').value;
+        const time = document.getElementById('input-time').value;
+        const day = document.getElementById('input-day').value;
+
+        if (!subject || !time) {
+            alert("Nama Pelajaran dan Jam wajib diisi!");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "schedules"), {
+                subject,
+                teacher,
+                time,
+                day,
+                createdAt: new Date()
+            });
+            // Clear inputs
+            document.getElementById('input-subject').value = '';
+            document.getElementById('input-teacher').value = '';
+            document.getElementById('input-time').value = '';
+        } catch (error) {
+            console.error("Error adding schedule:", error);
+        }
+    };
+}
+
+// Global expose for delete button
+window.deleteJadwal = async (id) => {
+    if (confirm("Hapus jadwal ini?")) {
+        await deleteDoc(doc(db, "schedules", id));
+    }
+};

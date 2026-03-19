@@ -84,6 +84,9 @@
                 <button id="tab-users-btn" class="flex-1 py-4 text-center tab-active transition-all">
                     <i class="fas fa-users-cog mr-2"></i> Atur User
                 </button>
+                <button id="tab-manage-jadwal-btn" class="flex-1 py-4 text-center text-gray-500 transition-all">
+                    <i class="fas fa-edit mr-2"></i> Kelola Jadwal
+                </button>
                 <button id="tab-monitoring-btn" class="flex-1 py-4 text-center text-gray-500 transition-all">
                     <i class="fas fa-chart-line mr-2"></i> Monitoring Ortu
                 </button>
@@ -103,6 +106,42 @@
                         </thead>
                         <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
                             <!-- User rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: Kelola Jadwal -->
+            <div id="content-manage-jadwal" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="font-bold text-gray-900 mb-4">Input Mata Pelajaran Baru</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="input-subject" placeholder="Nama Pelajaran (Ex: MTK)" class="p-2 border rounded-lg">
+                        <input type="text" id="input-teacher" placeholder="Guru (Ex: Pak Budi)" class="p-2 border rounded-lg">
+                        <input type="text" id="input-time" placeholder="Jam (Ex: 07:30 - 09:00)" class="p-2 border rounded-lg">
+                        <select id="input-day" class="p-2 border rounded-lg">
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
+                        </select>
+                        <button id="save-jadwal-btn" class="bg-indigo-600 text-white rounded-lg p-2 hover:bg-indigo-700 transition-all">Simpan Jadwal</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl card-shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HARI</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PELAJARAN</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JAM</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manage-jadwal-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Injected rows -->
                         </tbody>
                     </table>
                 </div>
@@ -245,22 +284,39 @@
     <script>
         // Tab switching logic for Admin (simple)
         document.getElementById('tab-users-btn')?.addEventListener('click', () => {
+            hideAllAdminTabs();
             document.getElementById('content-users').classList.remove('hidden');
-            document.getElementById('content-monitoring').classList.add('hidden');
             document.getElementById('tab-users-btn').classList.add('tab-active');
             document.getElementById('tab-users-btn').classList.remove('text-gray-500');
-            document.getElementById('tab-monitoring-btn').classList.add('text-gray-500');
-            document.getElementById('tab-monitoring-btn').classList.remove('tab-active');
+        });
+
+        document.getElementById('tab-manage-jadwal-btn')?.addEventListener('click', () => {
+            hideAllAdminTabs();
+            document.getElementById('content-manage-jadwal').classList.remove('hidden');
+            document.getElementById('tab-manage-jadwal-btn').classList.add('tab-active');
+            document.getElementById('tab-manage-jadwal-btn').classList.remove('text-gray-500');
         });
 
         document.getElementById('tab-monitoring-btn')?.addEventListener('click', () => {
-            document.getElementById('content-users').classList.add('hidden');
+            hideAllAdminTabs();
             document.getElementById('content-monitoring').classList.remove('hidden');
-            document.getElementById('tab-users-btn').classList.remove('tab-active');
-            document.getElementById('tab-users-btn').classList.add('text-gray-500');
-            document.getElementById('tab-monitoring-btn').classList.remove('text-gray-500');
             document.getElementById('tab-monitoring-btn').classList.add('tab-active');
+            document.getElementById('tab-monitoring-btn').classList.remove('text-gray-500');
         });
+
+        function hideAllAdminTabs() {
+            ['tab-users-btn', 'tab-manage-jadwal-btn', 'tab-monitoring-btn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if(btn) {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('text-gray-500');
+                }
+            });
+            ['content-users', 'content-manage-jadwal', 'content-monitoring'].forEach(id => {
+                const content = document.getElementById(id);
+                if(content) content.classList.add('hidden');
+            });
+        }
 
         // Tab switching logic for User
         const userTabs = ['jadwal', 'tasks', 'habits', 'kontak'];

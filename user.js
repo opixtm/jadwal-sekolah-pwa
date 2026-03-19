@@ -1,6 +1,6 @@
 // user.js
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentUserId = null;
 
@@ -17,40 +17,57 @@ function loadSchedule() {
     const jadwalList = document.getElementById('jadwal-list');
     const ujianList = document.getElementById('ujian-list');
     
-    // Mock data for initial load - in real scenario, fetch from Firestore
-    const dailySchedule = [
-        { time: '07:30 - 09:00', subject: 'Matematika', teacher: 'Pak Budi' },
-        { time: '09:15 - 10:45', subject: 'Bahasa Indonesia', teacher: 'Bu Siti' },
-        { time: '11:00 - 12:30', subject: 'IPA', teacher: 'Pak Anton' }
-    ];
+    // Get Current Day in Indonesian
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const today = days[new Date().getDay()];
+    
+    // Set placeholder while loading
+    if (jadwalList) jadwalList.innerHTML = '<p class="text-gray-400 text-center py-4">Memuat jadwal...</p>';
 
-    jadwalList.innerHTML = dailySchedule.map(item => `
-        <div class="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm flex justify-between items-center">
-            <div>
-                <div class="text-xs text-gray-400 font-medium uppercase">${item.time}</div>
-                <div class="font-bold text-gray-800">${item.subject}</div>
-                <div class="text-sm text-gray-500">${item.teacher}</div>
-            </div>
-            <i class="fas fa-chevron-right text-gray-300"></i>
-        </div>
-    `).join('');
+    // Fetch from Firestore
+    const q = query(collection(db, "schedules"), where("day", "==", today), orderBy("time"));
+    onSnapshot(q, (snapshot) => {
+        if (jadwalList) {
+            if (snapshot.empty) {
+                jadwalList.innerHTML = `<p class="text-gray-400 text-center py-4">Tidak ada jadwal untuk hari ${today}.</p>`;
+            } else {
+                jadwalList.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    const item = docSnap.data();
+                    jadwalList.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm flex justify-between items-center">
+                            <div>
+                                <div class="text-xs text-gray-400 font-medium uppercase">${item.time}</div>
+                                <div class="font-bold text-gray-800">${item.subject}</div>
+                                <div class="text-sm text-gray-500">${item.teacher}</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-300"></i>
+                        </div>
+                    `;
+                });
+            }
+        }
+    });
 
+    // Mock exams (can be made dynamic later too)
     const exams = [
         { date: '25 Mar 2024', subject: 'Ujian Harian Matematika', type: 'UH' }
     ];
 
-    ujianList.innerHTML = exams.map(item => `
-        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 shadow-sm flex items-center gap-4">
-            <div class="bg-yellow-500 text-white w-12 h-12 rounded-lg flex flex-col items-center justify-center font-bold">
-                <div class="text-[10px] leading-tight opacity-80 uppercase">MAR</div>
-                <div class="text-lg leading-tight">25</div>
+    if (ujianList) {
+        ujianList.innerHTML = exams.map(item => `
+            <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 shadow-sm flex items-center gap-4">
+                <div class="bg-yellow-500 text-white w-12 h-12 rounded-lg flex flex-col items-center justify-center font-bold">
+                    <div class="text-[10px] leading-tight opacity-80 uppercase">MAR</div>
+                    <div class="text-lg leading-tight">25</div>
+                </div>
+                <div>
+                    <div class="font-bold text-gray-800">${item.subject}</div>
+                    <div class="text-xs text-yellow-700 font-medium">Tipe: ${item.type}</div>
+                </div>
             </div>
-            <div>
-                <div class="font-bold text-gray-800">${item.subject}</div>
-                <div class="text-xs text-yellow-700 font-medium">Tipe: ${item.type}</div>
-            </div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 }
 
 async function loadTasks() {
