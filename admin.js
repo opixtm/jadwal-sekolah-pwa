@@ -177,19 +177,22 @@ function loadScheduleManager() {
     saveBtn.onclick = async () => {
         const subject = document.getElementById('input-subject').value;
         const teacher = document.getElementById('input-teacher').value;
-        const time = document.getElementById('input-time').value;
+        const timeStart = document.getElementById('input-time-start').value;
+        const timeEnd = document.getElementById('input-time-end').value;
         const day = document.getElementById('input-day').value;
 
-        if (!subject || !time) {
-            alert("Nama Pelajaran dan Jam wajib diisi!");
+        if (!subject || !teacher || !timeStart || !timeEnd) {
+            alert("Harap isi semua kolom!");
             return;
         }
+
+        const fullTime = `${timeStart} - ${timeEnd}`;
 
         try {
             await addDoc(collection(db, "schedules"), {
                 subject,
                 teacher,
-                time,
+                time: fullTime,
                 day,
                 userId: 'common',
                 createdAt: new Date()
@@ -197,7 +200,8 @@ function loadScheduleManager() {
             // Clear inputs
             document.getElementById('input-subject').value = '';
             document.getElementById('input-teacher').value = '';
-            document.getElementById('input-time').value = '';
+            document.getElementById('input-time-start').value = '';
+            document.getElementById('input-time-end').value = '';
         } catch (error) {
             console.error("Error adding schedule:", error);
         }

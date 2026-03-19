@@ -12,6 +12,7 @@ export function initUser() {
     loadHabits();
     loadContacts();
     loadUserScheduleManager();
+    initModals();
 }
 
 function loadSchedule() {
@@ -25,36 +26,45 @@ function loadSchedule() {
     // Set placeholder while loading
     if (jadwalList) jadwalList.innerHTML = '<p class="text-gray-400 text-center py-4">Memuat jadwal...</p>';
 
-    // Fetch from Firestore: Common (School) + Own (Home)
+    // Fetch from Firestore: Only by Day to avoid Index requirement for 'in' + 'orderBy'
     const q = query(
         collection(db, "schedules"), 
-        where("day", "==", today), 
-        where("userId", "in", ["common", currentUserId])
+        where("day", "==", today)
     );
     
-    // NOTE: This query REQUIRES a composite index (day ASC, userId ASC) iforderBy is used.
-    // To avoid waiting for another index, we'll sort in JS or use simpler query.
     onSnapshot(q, (snapshot) => {
         if (jadwalList) {
-            if (snapshot.empty) {
+            // Local filter for Common OR specific User
+            const docs = snapshot.docs.filter(d => {
+                const data = d.data();
+                return data.userId === 'common' || data.userId === currentUserId;
+            });
+
+            // Sort by time locally
+            docs.sort((a, b) => a.data().time.localeCompare(b.data().time));
+
+            if (docs.length === 0) {
                 jadwalList.innerHTML = `<p class="text-gray-400 text-center py-4">Tidak ada jadwal untuk hari ${today}.</p>`;
             } else {
                 jadwalList.innerHTML = '';
-                snapshot.forEach((docSnap) => {
-                    const item = docSnap.data();
-                    jadwalList.innerHTML += `
-                        <div class="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm flex justify-between items-center">
-                            <div>
-                                <div class="text-xs text-gray-400 font-medium uppercase">${item.time}</div>
-                                <div class="font-bold text-gray-800">${item.subject}</div>
-                                <div class="text-sm text-gray-500">${item.teacher}</div>
-                            </div>
-                            <i class="fas fa-chevron-right text-gray-300"></i>
-                        </div>
-                    `;
-                });
-            }
+                docs.forEach((docSnap) => {
+                const item = docSnap.data();
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4';
+                card.innerHTML = `
+                    <div class="bg-indigo-50 p-3 rounded-xl text-indigo-600">
+                        <i class="fas ${item.userId === 'common' ? 'fa-school' : 'fa-home'} text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">${item.time}</div>
+                        <div class="font-bold text-gray-900">${item.subject}</div>
+                        <div class="text-xs text-gray-500">${item.teacher}</div>
+                    </div>
+                `;
+                jadwalList.appendChild(card);
+            });
         }
+    }
     });
 
     // Mock exams (can be made dynamic later too)
@@ -90,17 +100,30 @@ async function loadTasks() {
         const data = docSnap.data();
         const tasks = data.tasks || [];
         
-        tasksList.innerHTML = tasks.length ? tasks.map((task, index) => `
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 transition-all ${task.completed ? 'opacity-60' : ''}">
-                <input type="checkbox" ${task.completed ? 'checked' : ''} 
-                    onchange="toggleTask(${index})"
-                    class="w-6 h-6 rounded-full border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                <div class="flex-1">
-                    <div class="font-bold text-gray-800 ${task.completed ? 'line-through' : ''}">${task.name}</div>
-                    <div class="text-xs text-gray-400">${task.category}</div>
-                </div>
-            </div>
-        `).join('') : '<p class="text-gray-400 text-center py-4">Belum ada tugas.</p>';
+        if (tasks.length === 0) {
+            tasksList.innerHTML = '<p class="text-gray-400 text-center py-4">Belum ada tugas.</p>';
+        } else {
+            tasksList.innerHTML = ''; // Clear existing content
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group';
+                li.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                            onchange="window.toggleTask(${index})"
+                            class="w-6 h-6 rounded-lg text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        <div>
+                            <div class="font-bold text-gray-900 ${task.completed ? 'line-through opacity-50' : ''}">${task.title}</div>
+                            <div class="text-[10px] flex gap-2">
+                                <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${task.category}</span>
+                                <span class="text-gray-400">Due: ${task.dueDate || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                tasksList.appendChild(li);
+            });
+        }
     });
 }
 
@@ -233,31 +256,93 @@ function loadUserScheduleManager() {
 
     saveBtn.onclick = async () => {
         const subject = document.getElementById('user-input-subject').value;
-        const time = document.getElementById('user-input-time').value;
+        const timeStart = document.getElementById('user-input-time-start').value;
+        const timeEnd = document.getElementById('user-input-time-end').value;
         const day = document.getElementById('user-input-day').value;
 
-        if (!subject || !time) {
+        if (!subject || !timeStart || !timeEnd) {
             alert("Nama Kegiatan dan Jam wajib diisi!");
             return;
         }
+
+        const fullTime = `${timeStart} - ${timeEnd}`;
 
         try {
             await addDoc(collection(db, "schedules"), {
                 subject,
                 teacher: "Kegiatan Rumah",
-                time,
+                time: fullTime,
                 day,
                 userId: currentUserId,
                 createdAt: new Date()
             });
             // Clear inputs
             document.getElementById('user-input-subject').value = '';
-            document.getElementById('user-input-time').value = '';
+            document.getElementById('user-input-time-start').value = '';
+            document.getElementById('user-input-time-end').value = '';
         } catch (error) {
             console.error("Error adding user schedule:", error);
         }
     };
 }
+
+// --- Task & Modal Management ---
+function initModals() {
+    const addBtn = document.getElementById('add-task-btn');
+    const saveTaskBtn = document.getElementById('btn-save-task');
+
+    if (addBtn) {
+        addBtn.onclick = () => window.openModal('task');
+    }
+
+    if (saveTaskBtn) {
+        saveTaskBtn.onclick = async () => {
+            const name = document.getElementById('task-name').value;
+            const category = document.getElementById('task-category').value;
+            const given = document.getElementById('task-given').value;
+            const due = document.getElementById('task-due').value;
+
+            if (!name || !due) {
+                alert("Nama Tugas dan Tanggal Dikumpulkan wajib diisi!");
+                return;
+            }
+
+            const docRef = doc(db, 'progress', currentUserId);
+            const docSnap = await getDoc(docRef);
+            
+            const newTask = {
+                title: name,
+                category: category,
+                completed: false,
+                givenDate: given,
+                dueDate: due,
+                createdAt: new Date().toISOString()
+            };
+
+            if (docSnap.exists()) {
+                const tasks = docSnap.data().tasks || [];
+                tasks.push(newTask);
+                await setDoc(docRef, { tasks }, { merge: true });
+            } else {
+                await setDoc(docRef, { tasks: [newTask] });
+            }
+
+            window.closeModal('task');
+            // Reset fields
+            document.getElementById('task-name').value = '';
+            document.getElementById('task-given').value = '';
+            document.getElementById('task-due').value = '';
+        };
+    }
+}
+
+window.openModal = (id) => {
+    document.getElementById(`modal-${id}`).classList.remove('hidden');
+};
+
+window.closeModal = (id) => {
+    document.getElementById(`modal-${id}`).classList.add('hidden');
+};
 
 window.deleteUserJadwal = async (id) => {
     if (confirm("Hapus kegiatan ini?")) {
