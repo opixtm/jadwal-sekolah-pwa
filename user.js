@@ -68,15 +68,16 @@ function todayLogRef() {
     return doc(db, 'progress', currentUserId, 'logs', getTodayDate());
 }
 
-// Load flash note for current user from admin
+// Load flash note for current user from admin (stored in users doc)
 function loadFlashNote() {
     const noteCard = document.getElementById('flash-note-card');
     const noteText = document.getElementById('flash-note-text');
     if (!noteCard || !noteText) return;
 
-    onSnapshot(doc(db, 'flashnotes', currentUserId), (snap) => {
-        if (snap.exists() && snap.data().message) {
-            noteText.textContent = snap.data().message;
+    onSnapshot(doc(db, 'users', currentUserId), (snap) => {
+        const note = snap.exists() && snap.data().flashNote;
+        if (note) {
+            noteText.textContent = note;
             noteCard.classList.remove('hidden');
         } else {
             noteCard.classList.add('hidden');

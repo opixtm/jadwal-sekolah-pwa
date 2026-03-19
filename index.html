@@ -184,17 +184,32 @@
 
             <!-- Tab Content: Parental Monitoring -->
             <div id="content-monitoring" class="hidden space-y-6">
-                <div class="bg-white p-4 rounded-xl card-shadow space-y-3">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Pilih Profil Anak:</label>
-                        <select id="child-select" class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                            <option value="">Pilih...</option>
-                        </select>
+                <!-- Dropdown Pilih Anak -->
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wider">Pilih Profil Anak:</label>
+                    <select id="child-select" class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
+                        <option value="">Pilih...</option>
+                    </select>
+
+                    <div class="mt-4">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wider flex items-center gap-2">
+                           <i class="far fa-calendar-alt"></i> Pilih Tanggal Laporan:
+                        </label>
+                        <input type="date" id="monitoring-date-picker" class="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">📅 Pilih Tanggal Laporan:</label>
-                        <input type="date" id="monitoring-date-picker" class="block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 sm:text-sm">
-                    </div>
+                </div>
+
+                <!-- Flash Note dari Admin ke Anak (Pesan Instan) -->
+                <div id="flash-note-admin-section" class="hidden bg-white p-4 rounded-xl card-shadow border-l-4 border-amber-400">
+                    <h4 class="font-bold text-gray-800 mb-1 flex items-center gap-2">
+                        <span class="text-xl">📢</span> Flash Note ke Anak
+                    </h4>
+                    <p class="text-[11px] text-gray-400 mb-3 italic">Pesan ini akan muncul di halaman anak saat mereka login.</p>
+                    <textarea id="flash-note-input" rows="3" placeholder="Tulis pesan untuk anak (Ex: Jangan lupa belajar Matematika hari ini!)" class="w-full p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm outline-none resize-none focus:bg-white transition-all"></textarea>
+                    <button id="save-flash-note-btn" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                        Kirim Pesan 📨
+                    </button>
+                    <p id="flash-note-status" class="text-xs text-green-600 font-bold mt-1 text-center hidden">✅ Pesan terupdate!</p>
                 </div>
 
                 <div id="monitoring-data" class="hidden space-y-6">
@@ -214,15 +229,6 @@
                             </div>
                         </div>
                         <p id="monitoring-last-updated" class="text-xs text-gray-400 text-right mt-1"></p>
-                    </div>
-
-                    <!-- Flash Note dari Admin ke Anak -->
-                    <div class="bg-white p-4 rounded-xl card-shadow">
-                        <h4 class="font-bold text-gray-800 mb-2">📢 Flash Note ke Anak</h4>
-                        <p class="text-xs text-gray-400 mb-3">Pesan ini akan muncul di halaman anak saat login.</p>
-                        <textarea id="flash-note-input" rows="3" placeholder="Tulis pesan untuk anak (Ex: Jangan lupa belajar Matematika hari ini!)" class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none resize-none"></textarea>
-                        <button id="save-flash-note-btn" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-xl transition-all">Kirim Pesan 📨</button>
-                        <p id="flash-note-status" class="text-xs text-green-500 font-bold mt-1 hidden">✅ Pesan terkirim!</p>
                     </div>
 
                     <!-- Live Checklist -->

@@ -118,11 +118,14 @@ function loadParentalMonitoring() {
 
     childSelect.addEventListener('change', (e) => {
         currentUid = e.target.value;
+        const flashNoteAdmin = document.getElementById('flash-note-admin-section');
         if (currentUid) {
             loadForDate();
             loadFlashNoteForChild(currentUid);
+            if (flashNoteAdmin) flashNoteAdmin.classList.remove('hidden');
         } else {
             monitoringData.classList.add('hidden');
+            if (flashNoteAdmin) flashNoteAdmin.classList.add('hidden');
         }
     });
 
@@ -136,7 +139,7 @@ function loadParentalMonitoring() {
         saveFlashNoteBtn.onclick = async () => {
             if (!currentUid) { alert('Pilih anak dulu!'); return; }
             const message = flashNoteInput.value.trim();
-            await setDoc(doc(db, 'flashnotes', currentUid), { message, updatedAt: serverTimestamp() });
+            await updateDoc(doc(db, 'users', currentUid), { flashNote: message, lastNoteAt: serverTimestamp() });
             flashNoteStatus.classList.remove('hidden');
             setTimeout(() => flashNoteStatus.classList.add('hidden'), 3000);
         };
@@ -146,8 +149,8 @@ function loadParentalMonitoring() {
 function loadFlashNoteForChild(uid) {
     const flashNoteInput = document.getElementById('flash-note-input');
     if (!flashNoteInput) return;
-    onSnapshot(doc(db, 'flashnotes', uid), (snap) => {
-        flashNoteInput.value = snap.exists() ? (snap.data().message || '') : '';
+    onSnapshot(doc(db, 'users', uid), (snap) => {
+        flashNoteInput.value = snap.exists() ? (snap.data().flashNote || '') : '';
     });
 }
 
