@@ -3,45 +3,60 @@ import { db } from './firebase-config.js';
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export function initAdmin() {
-    console.log('Admin Module Initialized');
-    loadUserList();
+    loadUsers();
     loadScheduleManager();
-    loadParentalMonitoring();
+    loadTeacherManager();
+    loadMonitoring();
+    window.viewImage = (src) => {
+        const viewer = document.createElement('div');
+        viewer.className = 'fixed inset-0 bg-black bg-opacity-90 z-[100] flex items-center justify-center p-4';
+        viewer.onclick = () => viewer.remove();
+        viewer.innerHTML = `<img src="${src}" class="max-w-full max-h-full rounded-xl">`;
+        document.body.appendChild(viewer);
+    };
 }
 
 function loadUserList() {
     const userTableBody = document.getElementById('user-table-body');
-    const q = query(collection(db, 'users'));
+    if (!userTableBody) return;
 
-    onSnapshot(q, (snapshot) => {
+    onSnapshot(collection(db, "users"), (snapshot) => {
         userTableBody.innerHTML = '';
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="px-3 py-4 whitespace-nowrap">
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10">
-                            <img class="h-10 w-10 rounded-full" src="${user.photoURL || 'https://via.placeholder.com/40'}" alt="">
+                            <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${user.name}&background=random" alt="">
                         </div>
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900">${user.displayName}</div>
+                            <div class="text-sm font-medium text-gray-900">${user.name}</div>
                             <div class="text-sm text-gray-500">${user.email}</div>
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(user.role)}">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                          user.role === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
                         ${user.role}
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    ${user.role === 'Pending' ? `<button onclick="updateRole('${user.uid}', 'Approved')" class="text-indigo-600 hover:text-indigo-900">Approve</button>` : ''}
-                    ${user.role === 'Approved' ? `<button onclick="updateRole('${user.uid}', 'Pending')" class="text-yellow-600 hover:text-yellow-900">Deny</button>` : ''}
-                    <button onclick="removeUser('${user.uid}')" class="text-red-600 hover:text-red-900">Remove</button>
+                    ${user.role === 'pending' ? `
+                        <button onclick="window.updateUserStatus('${docSnap.id}', 'approved')" class="text-indigo-600 hover:text-indigo-900">Approve</button>
+                    ` : ''}
+                    ${user.role === 'approved' ? `
+                        <button onclick="window.updateUserStatus('${docSnap.id}', 'admin')" class="text-purple-600 hover:text-purple-900">Make Admin</button>
+                    ` : ''}
+                    ${user.role !== 'admin' ? `
+                        <button onclick="window.deleteUser('${docSnap.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                    ` : '<span class="text-gray-400">Owner</span>'}
                 </td>
             `;
-            userTableBody.appendChild(row);
+            userTableBody.appendChild(tr);
         });
     });
 }
@@ -129,10 +144,30 @@ function renderMonitoringList(container, items) {
     container.innerHTML = '';
     items.forEach(item => {
         const li = document.createElement('li');
-        li.className = 'flex items-center justify-between p-2 hover:bg-gray-50 rounded';
+        li.className = 'p-3 hover:bg-gray-50 rounded-xl border border-gray-50 space-y-2 mb-2';
+        
+        let details = '';
+        if (item.type === 'multi') {
+            details = `<div class="flex gap-1 mt-1">
+                ${item.items.map(sub => `
+                    <span class="px-1.5 py-0.5 rounded text-[8px] font-bold ${sub.done ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}">${sub.name}</span>
+                `).join('')}
+            </div>`;
+        }
+        
+        if (item.type === 'note' && item.notes) {
+            details = `<div class="text-[10px] text-indigo-500 font-bold bg-indigo-50 p-1 rounded mt-1 italic">Note: ${item.notes}</div>`;
+        }
+
         li.innerHTML = `
-            <span class="text-sm">${item.name}</span>
-            <i class="fas ${item.completed ? 'fa-check-circle text-green-500' : 'fa-times-circle text-gray-300'}"></i>
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-gray-700">${item.name || item.title}</span>
+                <div class="flex items-center gap-2">
+                    ${item.photo ? `<i class="fas fa-image text-indigo-500 cursor-pointer" onclick="window.viewImage('${item.photo}')"></i>` : ''}
+                    <i class="fas ${item.done || item.completed ? 'fa-check-circle text-green-500' : 'fa-times-circle text-gray-300'}"></i>
+                </div>
+            </div>
+            ${details}
         `;
         container.appendChild(li);
     });
@@ -208,9 +243,78 @@ function loadScheduleManager() {
     };
 }
 
+// --- Teacher Management ---
+function loadTeacherManager() {
+    const tableBody = document.getElementById('manage-guru-table-body');
+    const saveBtn = document.getElementById('save-guru-btn');
+
+    if (!tableBody || !saveBtn) return;
+
+    onSnapshot(collection(db, "contacts"), (snapshot) => {
+        tableBody.innerHTML = '';
+        snapshot.forEach((docSnap) => {
+            const item = docSnap.data();
+            if (item.type !== 'guru') return; // Only teachers in this table
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.name}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.subject}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.phone}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="window.deleteGuru('${docSnap.id}')" class="text-red-600 hover:text-red-900">Hapus</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    });
+
+    saveBtn.onclick = async () => {
+        const name = document.getElementById('guru-name').value;
+        const subject = document.getElementById('guru-subject').value;
+        const phone = document.getElementById('guru-phone').value;
+
+        if (!name || !subject || !phone) {
+            alert("Harap isi semua kolom!");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "contacts"), {
+                name,
+                subject,
+                phone,
+                type: 'guru',
+                createdAt: new Date()
+            });
+            document.getElementById('guru-name').value = '';
+            document.getElementById('guru-subject').value = '';
+            document.getElementById('guru-phone').value = '';
+        } catch (error) {
+            console.error("Error adding guru:", error);
+        }
+    };
+}
+
+window.deleteGuru = async (id) => {
+    if (confirm("Hapus data guru ini?")) {
+        await deleteDoc(doc(db, "contacts", id));
+    }
+};
+
 // Global expose for delete button
 window.deleteJadwal = async (id) => {
     if (confirm("Hapus jadwal ini?")) {
         await deleteDoc(doc(db, "schedules", id));
     }
+};
+
+window.deleteUser = async (id) => {
+    if (confirm("Hapus user ini?")) {
+        await deleteDoc(doc(db, "users", id));
+    }
+};
+
+window.updateUserStatus = async (id, status) => {
+    await updateDoc(doc(db, "users", id), { role: status });
 };

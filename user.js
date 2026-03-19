@@ -8,6 +8,7 @@ export function initUser() {
     console.log('User Module Initialized');
     currentUserId = auth.currentUser.uid;
     loadSchedule();
+    loadExams();
     loadTasks();
     loadHabits();
     loadContacts();
@@ -66,26 +67,47 @@ function loadSchedule() {
         }
     }
     });
+}
 
-    // Mock exams (can be made dynamic later too)
-    const exams = [
-        { date: '25 Mar 2024', subject: 'Ujian Harian Matematika', type: 'UH' }
-    ];
+function loadExams() {
+    const ujianList = document.getElementById('ujian-list');
+    const docRef = doc(db, 'progress', currentUserId);
+    
+    onSnapshot(docRef, (docSnap) => {
+        if (!ujianList) return;
+        ujianList.innerHTML = '';
+        
+        const data = docSnap.data() || {};
+        const exams = data.exams || [];
 
-    if (ujianList) {
-        ujianList.innerHTML = exams.map(item => `
-            <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 shadow-sm flex items-center gap-4">
-                <div class="bg-yellow-500 text-white w-12 h-12 rounded-lg flex flex-col items-center justify-center font-bold">
-                    <div class="text-[10px] leading-tight opacity-80 uppercase">MAR</div>
-                    <div class="text-lg leading-tight">25</div>
+        if (exams.length === 0) {
+            ujianList.innerHTML = '<p class="text-gray-400 text-center py-4">Tidak ada ujian mendatang.</p>';
+            return;
+        }
+
+        // Sort by date
+        exams.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        exams.forEach(exam => {
+            const dateObj = new Date(exam.date);
+            const day = dateObj.getDate();
+            const month = dateObj.toLocaleString('id-ID', { month: 'short' }).toUpperCase();
+            
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group';
+            card.innerHTML = `
+                <div class="bg-yellow-50 text-yellow-600 w-12 h-12 rounded-xl flex flex-col items-center justify-center border border-yellow-100">
+                    <div class="text-[10px] font-bold uppercase leading-none">${month}</div>
+                    <div class="text-xl font-black leading-none">${day}</div>
                 </div>
-                <div>
-                    <div class="font-bold text-gray-800">${item.subject}</div>
-                    <div class="text-xs text-yellow-700 font-medium">Tipe: ${item.type}</div>
+                <div class="flex-1">
+                    <div class="font-bold text-gray-900">${exam.name}</div>
+                    <div class="text-xs text-gray-500">Tipe: ${exam.type}</div>
                 </div>
-            </div>
-        `).join('');
-    }
+            `;
+            ujianList.appendChild(card);
+        });
+    });
 }
 
 async function loadTasks() {
@@ -106,18 +128,29 @@ async function loadTasks() {
             tasksList.innerHTML = ''; // Clear existing content
             tasks.forEach((task, index) => {
                 const li = document.createElement('li');
-                li.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group';
+                li.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3';
                 li.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <input type="checkbox" ${task.completed ? 'checked' : ''} 
-                            onchange="window.toggleTask(${index})"
-                            class="w-6 h-6 rounded-lg text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                        <div>
-                            <div class="font-bold text-gray-900 ${task.completed ? 'line-through opacity-50' : ''}">${task.title}</div>
-                            <div class="text-[10px] flex gap-2">
-                                <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${task.category}</span>
-                                <span class="text-gray-400">Due: ${task.dueDate || '-'}</span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                                onchange="window.toggleTask(${index})"
+                                class="w-6 h-6 rounded-lg text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                            <div>
+                                <div class="font-bold text-gray-900 ${task.completed ? 'line-through opacity-50' : ''}">${task.title}</div>
+                                <div class="text-[10px] flex gap-2">
+                                    <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${task.category}</span>
+                                    <span class="text-gray-400">Due: ${task.dueDate || '-'}</span>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="pt-2 flex items-center justify-between border-t border-gray-50 mt-2">
+                        <div class="flex items-center gap-2">
+                            <label class="cursor-pointer text-indigo-500 hover:text-indigo-700">
+                                <i class="fas fa-camera"></i> <span class="text-[10px] font-bold">BUKTI FOTO</span>
+                                <input type="file" accept="image/*" class="hidden" onchange="window.uploadTaskPhoto(${index}, this)">
+                            </label>
+                            ${task.photo ? `<img src="${task.photo}" class="w-8 h-8 rounded object-cover border" onclick="window.viewImage('${task.photo}')">` : ''}
                         </div>
                     </div>
                 `;
@@ -129,23 +162,82 @@ async function loadTasks() {
 
 async function loadHabits() {
     const habitsList = document.getElementById('habits-list');
-    const q = doc(db, 'progress', currentUserId);
+    const docRef = doc(db, 'progress', currentUserId);
+    
+    // Initialize default habits if not exists
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists() || !docSnap.data().habits) {
+        const defaultHabits = [
+            { name: "Shalat 5 Waktu", items: [
+                { id: "subuh", name: "Subuh", done: false },
+                { id: "dzuhur", name: "Dzuhur", done: false },
+                { id: "ashar", name: "Ashar", done: false },
+                { id: "maghrib", name: "Maghrib", done: false },
+                { id: "isya", name: "Isya", done: false }
+            ], type: 'multi', photo: null, done: false },
+            { name: "Membaca Al-Quran", done: false, type: 'note', notes: '', photo: null },
+            { name: "Membereskan Rumah", done: false, type: 'normal', photo: null },
+            { name: "Mandi & Gosok Gigi", done: false, type: 'normal', photo: null }
+        ];
+        await setDoc(docRef, { habits: defaultHabits }, { merge: true });
+    }
 
-    onSnapshot(q, (docSnap) => {
-        if (!docSnap.exists()) return;
-        const data = docSnap.data();
+    onSnapshot(docRef, (snap) => {
+        if (!habitsList) return;
+        habitsList.innerHTML = '';
+        const data = snap.data();
         const habits = data.habits || [];
-        
-        habitsList.innerHTML = habits.length ? habits.map((habit, index) => `
-            <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 transition-all ${habit.completed ? 'bg-green-50 border-green-100' : ''}">
-                <button onclick="toggleHabit(${index})" class="w-10 h-10 rounded-full flex items-center justify-center transition-all ${habit.completed ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'}">
-                    <i class="fas ${habit.completed ? 'fa-check' : 'fa-circle-notch'}"></i>
-                </button>
-                <div class="flex-1">
-                    <div class="font-bold text-gray-800">${habit.name}</div>
+
+        habits.forEach((habit, hIdx) => {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3';
+            
+            let contentHtml = `<div class="font-bold text-gray-800 flex justify-between items-center">
+                <span>${habit.name}</span>
+                ${habit.type === 'normal' || !habit.type ? `
+                    <input type="checkbox" ${habit.done ? 'checked' : ''} onchange="window.toggleHabit(${hIdx})" class="w-6 h-6 rounded-lg text-indigo-600">
+                ` : ''}
+            </div>`;
+
+            if (habit.type === 'multi') {
+                contentHtml += `<div class="grid grid-cols-5 gap-2 pt-2">
+                    ${habit.items.map((item, iIdx) => `
+                        <button onclick="window.toggleMultiHabit(${hIdx}, ${iIdx})" 
+                            class="p-2 rounded-xl text-[10px] font-bold transition-all border ${item.done ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-400 border-gray-100'}">
+                            ${item.name}
+                        </button>
+                    `).join('')}
+                </div>`;
+            }
+
+            if (habit.type === 'note') {
+                contentHtml += `
+                    <div class="flex gap-2 items-center">
+                        <input type="text" placeholder="Catatan (Ex: Al-Baqarah 1-10)" 
+                            value="${habit.notes || ''}" 
+                            onblur="window.updateHabitNotes(${hIdx}, this.value)"
+                            class="flex-1 p-2 bg-gray-50 border-none rounded-lg text-xs outline-none">
+                        <input type="checkbox" ${habit.done ? 'checked' : ''} onchange="window.toggleHabit(${hIdx})" class="w-6 h-6 rounded-lg text-indigo-600">
+                    </div>
+                `;
+            }
+
+            // Photo Attachment Section
+            contentHtml += `
+                <div class="pt-2 flex items-center justify-between border-t border-gray-50 mt-2">
+                    <div class="flex items-center gap-2">
+                        <label class="cursor-pointer text-indigo-500 hover:text-indigo-700">
+                            <i class="fas fa-camera"></i> <span class="text-[10px] font-bold">BUKTI FOTO</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="window.uploadHabitPhoto(${hIdx}, this)">
+                        </label>
+                        ${habit.photo ? `<img src="${habit.photo}" class="w-8 h-8 rounded object-cover border" onclick="window.viewImage('${habit.photo}')">` : ''}
+                    </div>
                 </div>
-            </div>
-        `).join('') : '';
+            `;
+
+            card.innerHTML = contentHtml;
+            habitsList.appendChild(card);
+        });
     });
 }
 
@@ -211,14 +303,81 @@ window.toggleTask = async (index) => {
     }
 };
 
+window.uploadTaskPhoto = async (index, input) => {
+    if (input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const base64 = e.target.result;
+            const docRef = doc(db, 'progress', currentUserId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const tasks = docSnap.data().tasks;
+                tasks[index].photo = base64;
+                await setDoc(docRef, { tasks: tasks }, { merge: true });
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
 window.toggleHabit = async (index) => {
     const docRef = doc(db, 'progress', currentUserId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
         const habits = docSnap.data().habits;
-        habits[index].completed = !habits[index].completed;
+        habits[index].done = !habits[index].done;
         await setDoc(docRef, { habits: habits }, { merge: true });
     }
+};
+
+window.toggleMultiHabit = async (hIdx, iIdx) => {
+    const docRef = doc(db, 'progress', currentUserId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const habits = docSnap.data().habits;
+        habits[hIdx].items[iIdx].done = !habits[hIdx].items[iIdx].done;
+        
+        // Track overall multi status
+        const allDone = habits[hIdx].items.every(i => i.done);
+        habits[hIdx].done = allDone;
+
+        await setDoc(docRef, { habits: habits }, { merge: true });
+    }
+};
+
+window.updateHabitNotes = async (index, value) => {
+    const docRef = doc(db, 'progress', currentUserId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const habits = docSnap.data().habits;
+        habits[index].notes = value;
+        await setDoc(docRef, { habits: habits }, { merge: true });
+    }
+};
+
+window.uploadHabitPhoto = async (index, input) => {
+    if (input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const base64 = e.target.result;
+            const docRef = doc(db, 'progress', currentUserId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const habits = docSnap.data().habits;
+                habits[index].photo = base64; // Using base64 for small PWA demo images
+                await setDoc(docRef, { habits: habits }, { merge: true });
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+window.viewImage = (src) => {
+    const viewer = document.createElement('div');
+    viewer.className = 'fixed inset-0 bg-black bg-opacity-90 z-[100] flex items-center justify-center p-4';
+    viewer.onclick = () => viewer.remove();
+    viewer.innerHTML = `<img src="${src}" class="max-w-full max-h-full rounded-xl">`;
+    document.body.appendChild(viewer);
 };
 
 // --- User Schedule Management (Home Activities) ---
@@ -319,19 +478,50 @@ function initModals() {
                 createdAt: new Date().toISOString()
             };
 
-            if (docSnap.exists()) {
-                const tasks = docSnap.data().tasks || [];
-                tasks.push(newTask);
-                await setDoc(docRef, { tasks }, { merge: true });
-            } else {
-                await setDoc(docRef, { tasks: [newTask] });
-            }
+            const data = docSnap.exists() ? docSnap.data() : {};
+            const tasks = data.tasks || [];
+            tasks.push(newTask);
+            await setDoc(docRef, { ...data, tasks }, { merge: true });
 
             window.closeModal('task');
             // Reset fields
             document.getElementById('task-name').value = '';
             document.getElementById('task-given').value = '';
             document.getElementById('task-due').value = '';
+        };
+    }
+
+    const saveExamBtn = document.getElementById('btn-save-exam');
+    if (saveExamBtn) {
+        saveExamBtn.onclick = async () => {
+            const name = document.getElementById('exam-name').value;
+            const type = document.getElementById('exam-type').value;
+            const date = document.getElementById('exam-date').value;
+
+            if (!name || !date) {
+                alert("Nama Ujian dan Tanggal wajib diisi!");
+                return;
+            }
+
+            const docRef = doc(db, 'progress', currentUserId);
+            const docSnap = await getDoc(docRef);
+            
+            const newExam = {
+                name: name,
+                type: type,
+                date: date,
+                createdAt: new Date().toISOString()
+            };
+
+            const data = docSnap.exists() ? docSnap.data() : {};
+            const exams = data.exams || [];
+            exams.push(newExam);
+            await setDoc(docRef, { ...data, exams }, { merge: true });
+
+            window.closeModal('exam');
+            // Reset fields
+            document.getElementById('exam-name').value = '';
+            document.getElementById('exam-date').value = '';
         };
     }
 }
