@@ -7,12 +7,23 @@ let currentUserId = null;
 export function initUser() {
     console.log('User Module Initialized');
     currentUserId = auth.currentUser.uid;
+
+    // Set today's date in UI
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const shortDate = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    const todayLabel = document.getElementById('today-date-label');
+    if (todayLabel) todayLabel.textContent = dateStr;
+    const habitDate = document.getElementById('today-habit-date');
+    if (habitDate) habitDate.textContent = shortDate;
+
     loadSchedule();
     loadExams();
     loadTasks();
     loadHabits();
     loadContacts();
     loadUserScheduleManager();
+    loadFlashNote();
     initModals();
 }
 
@@ -55,6 +66,22 @@ function getTodayDate() {
 // Returns Firestore ref for today's daily log
 function todayLogRef() {
     return doc(db, 'progress', currentUserId, 'logs', getTodayDate());
+}
+
+// Load flash note for current user from admin
+function loadFlashNote() {
+    const noteCard = document.getElementById('flash-note-card');
+    const noteText = document.getElementById('flash-note-text');
+    if (!noteCard || !noteText) return;
+
+    onSnapshot(doc(db, 'flashnotes', currentUserId), (snap) => {
+        if (snap.exists() && snap.data().message) {
+            noteText.textContent = snap.data().message;
+            noteCard.classList.remove('hidden');
+        } else {
+            noteCard.classList.add('hidden');
+        }
+    });
 }
 
 function loadSchedule() {

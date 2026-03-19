@@ -1,6 +1,6 @@
 // admin.js
 import { db } from './firebase-config.js';
-import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, addDoc, setDoc, getDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export function initAdmin() {
     loadUsers();
@@ -118,11 +118,37 @@ function loadParentalMonitoring() {
 
     childSelect.addEventListener('change', (e) => {
         currentUid = e.target.value;
-        if (currentUid) loadForDate();
-        else monitoringData.classList.add('hidden');
+        if (currentUid) {
+            loadForDate();
+            loadFlashNoteForChild(currentUid);
+        } else {
+            monitoringData.classList.add('hidden');
+        }
     });
 
     datePicker.addEventListener('change', () => loadForDate());
+
+    // Flash Note save button
+    const saveFlashNoteBtn = document.getElementById('save-flash-note-btn');
+    const flashNoteInput = document.getElementById('flash-note-input');
+    const flashNoteStatus = document.getElementById('flash-note-status');
+    if (saveFlashNoteBtn) {
+        saveFlashNoteBtn.onclick = async () => {
+            if (!currentUid) { alert('Pilih anak dulu!'); return; }
+            const message = flashNoteInput.value.trim();
+            await setDoc(doc(db, 'flashnotes', currentUid), { message, updatedAt: serverTimestamp() });
+            flashNoteStatus.classList.remove('hidden');
+            setTimeout(() => flashNoteStatus.classList.add('hidden'), 3000);
+        };
+    }
+}
+
+function loadFlashNoteForChild(uid) {
+    const flashNoteInput = document.getElementById('flash-note-input');
+    if (!flashNoteInput) return;
+    onSnapshot(doc(db, 'flashnotes', uid), (snap) => {
+        flashNoteInput.value = snap.exists() ? (snap.data().message || '') : '';
+    });
 }
 
 function subscribeToChildProgress(uid, date) {
