@@ -155,8 +155,9 @@
                             <option value="Ganjil">Semester Ganjil</option>
                             <option value="Genap">Semester Genap</option>
                         </select>
-                        <input type="text" id="input-subject" placeholder="Nama Pelajaran" class="p-2 border rounded-lg">
-                        <input type="text" id="input-teacher" placeholder="Guru" class="p-2 border rounded-lg">
+                        <select id="input-subject-teacher" class="p-2 border rounded-lg">
+                            <option value="">Pilih Pelajaran & Guru...</option>
+                        </select>
                         <div class="flex items-center gap-2">
                             <input type="time" id="input-time-start" class="p-2 border rounded-lg flex-1">
                             <span>-</span>
@@ -189,7 +190,20 @@
                     <h3 class="font-bold text-gray-900 mb-4">Daftarkan Guru Baru</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <input type="text" id="guru-name" placeholder="Nama Guru" class="p-2 border rounded-lg">
-                        <input type="text" id="guru-subject" placeholder="Mata Pelajaran" class="p-2 border rounded-lg">
+                        <select id="guru-subject" class="p-2 border rounded-lg">
+                            <option value="">-- Pilih Mata Pelajaran --</option>
+                            <option>Matematika</option>
+                            <option>Bahasa Indonesia</option>
+                            <option>Bahasa Inggris</option>
+                            <option>IPA</option>
+                            <option>IPS</option>
+                            <option>Agama</option>
+                            <option>PKn</option>
+                            <option>SBDP</option>
+                            <option>Olahraga</option>
+                            <option>TIK</option>
+                            <option>Lingkungan Hidup</option>
+                        </select>
                         <input type="text" id="guru-phone" placeholder="No. WhatsApp" class="p-2 border rounded-lg">
                         <button id="save-guru-btn" class="bg-green-600 text-white rounded-lg p-2 font-bold hover:bg-green-700">Simpan Guru</button>
                     </div>
@@ -209,8 +223,26 @@
                 </div>
             </div>
 
+            <!-- Tab Content: Pengaturan -->
+            <div id="content-config" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="font-bold text-gray-900 mb-6">Pengaturan Aplikasi</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 p-5 rounded-2xl border border-indigo-100">
+                            <label class="block text-xs font-bold text-indigo-400 uppercase mb-3">Semester Aktif:</label>
+                            <select id="active-semester-select" class="w-full p-4 border rounded-xl bg-white font-bold">
+                                <option value="Ganjil">Semester Ganjil 🍂</option>
+                                <option value="Genap">Semester Genap 🌸</option>
+                            </select>
+                            <button id="save-global-config-btn" class="mt-4 w-full bg-indigo-600 text-white rounded-xl p-4 font-bold">Simpan Setelan</button>
+                            <p id="global-config-status" class="text-xs text-green-600 font-bold mt-3 text-center hidden">✅ Tersimpan!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab Content: Parental Monitoring -->
-            <div id="content-monitoring" class="hidden space-y-6">
+             <div id="content-monitoring" class="hidden space-y-6">
                 <!-- Dropdown Pilih Anak -->
                 <div class="bg-white p-6 rounded-xl card-shadow">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wider">Pilih Profil Anak:</label>
@@ -272,25 +304,6 @@
                 </div>
             </div>
 
-            <!-- Tab Content: Global Configuration -->
-            <div id="content-global-config" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl card-shadow">
-                    <h3 class="font-bold text-gray-900 mb-4">Pengaturan Global Aplikasi</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="active-semester-select" class="block text-sm font-medium text-gray-700 mb-2">Semester Aktif</label>
-                            <select id="active-semester-select" class="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
-                                <option value="Ganjil">Ganjil</option>
-                                <option value="Genap">Genap</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button id="save-global-config-btn" class="w-full bg-indigo-600 text-white rounded-xl p-3 font-bold shadow-lg hover:bg-indigo-700 transition-all">Simpan Pengaturan</button>
-                        </div>
-                    </div>
-                    <p id="global-config-status" class="text-xs text-green-600 font-bold mt-3 text-center hidden">✅ Pengaturan berhasil disimpan!</p>
-                </div>
-            </div>
         </section>
 
         <!-- User Dashboard Section -->
@@ -424,9 +437,14 @@
                                     <option value="Jumat">Jumat</option>
                                 </select>
                             </div>
-                            </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Mata Pelajaran & Guru</label>
+                                <select id="user-select-subject-teacher" class="p-3 border border-gray-200 rounded-xl outline-none bg-white w-full">
+                                    <option value="">-- Pilih Mata Pelajaran --</option>
+                                </select>
+                            </div>
                             <div>
                                 <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Mulai</label>
                                 <input type="time" id="user-input-time-start" class="p-3 border border-gray-200 rounded-xl w-full outline-none">

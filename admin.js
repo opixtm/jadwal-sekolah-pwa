@@ -294,10 +294,6 @@ function updateUIProgress(done, total, lastUpdated) {
     // Add timestamp display if exists
     let tsLabel = document.getElementById('progress-timestamp');
     if (!tsLabel) {
-        tsLabel = document.createElement('div');
-        tsLabel.id = 'progress-timestamp';
-        tsLabel.className = 'text-[10px] text-gray-400 text-center mt-2';
-        document.getElementById('content-monitoring').querySelector('.bg-white.p-6')?.appendChild(tsLabel);
     }
     tsLabel.textContent = `Update Terakhir: ${lastUpdated}`;
 }
@@ -306,8 +302,23 @@ function updateUIProgress(done, total, lastUpdated) {
 function loadScheduleManager() {
     const tableBody = document.getElementById('manage-jadwal-table-body');
     const saveBtn = document.getElementById('save-jadwal-btn');
+    const subTeacherSelect = document.getElementById('input-subject-teacher');
 
     if (!tableBody || !saveBtn) return;
+
+    // Load Teachers into dropdown
+    onSnapshot(query(collection(db, 'contacts'), where('type', '==', 'guru')), (snap) => {
+        if (subTeacherSelect) {
+            subTeacherSelect.innerHTML = '<option value="">Pilih Pelajaran & Guru...</option>';
+            snap.forEach(d => {
+                const g = d.data();
+                const opt = document.createElement('option');
+                opt.value = `${g.subject}|${g.name}`;
+                opt.textContent = `${g.subject} - ${g.name}`;
+                subTeacherSelect.appendChild(opt);
+            });
+        }
+    });
 
     // Listen to schedules collection
     const q = query(collection(db, "schedules"), orderBy("day"), orderBy("time"));
@@ -322,6 +333,9 @@ function loadScheduleManager() {
                     <div class="font-bold">${item.subject}</div>
                     <div class="text-xs text-gray-400">${item.teacher}</div>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-bold">
+                    ${item.level || 'Semua'} / ${item.semester || 'Ganjil'}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.time}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button onclick="window.deleteJadwal('${docSnap.id}')" class="text-red-600 hover:text-red-900">Hapus</button>
@@ -334,17 +348,19 @@ function loadScheduleManager() {
     });
 
     saveBtn.onclick = async () => {
-        const subject = document.getElementById('input-subject').value;
-        const teacher = document.getElementById('input-teacher').value;
+        const subTeacherVal = document.getElementById('input-subject-teacher').value;
         const timeStart = document.getElementById('input-time-start').value;
         const timeEnd = document.getElementById('input-time-end').value;
         const day = document.getElementById('input-day').value;
+        const level = document.getElementById('input-grade-level').value;
+        const semester = document.getElementById('input-semester').value;
 
-        if (!subject || !teacher || !timeStart || !timeEnd) {
-            alert("Harap isi semua kolom!");
+        if (!subTeacherVal || !timeStart || !timeEnd) {
+            alert("Harap pilih pelajaran dan isi jam!");
             return;
         }
 
+        const [subject, teacher] = subTeacherVal.split('|');
         const fullTime = `${timeStart} - ${timeEnd}`;
 
         try {
@@ -353,16 +369,15 @@ function loadScheduleManager() {
                 teacher,
                 time: fullTime,
                 day,
-                level: document.getElementById('input-grade-level').value,
-                semester: document.getElementById('input-semester').value,
+                level,
+                semester,
                 userId: 'common',
-                createdAt: new Date()
+                createdAt: serverTimestamp()
             });
-            // Clear inputs
-            document.getElementById('input-subject').value = '';
-            document.getElementById('input-teacher').value = '';
+            // Reset
             document.getElementById('input-time-start').value = '';
-            document.getElementById('input-time-end').value = '';
+            document.getElementById('input-time-end').value = ''; // Corrected from user-input-time-end
+            if (subTeacherSelect) subTeacherSelect.value = ''; // Clear the dropdown
         } catch (error) {
             console.error("Error adding schedule:", error);
         }
@@ -372,8 +387,6 @@ function loadScheduleManager() {
 // --- Teacher Management ---
 function loadTeacherManager() {
     const tableBody = document.getElementById('manage-guru-table-body');
-    const saveBtn = document.getElementById('save-guru-btn');
-
     if (!tableBody || !saveBtn) return;
 
     onSnapshot(collection(db, "contacts"), (snapshot) => {
@@ -485,16 +498,26 @@ async function initAppConfig() {
 
     if (!semesterSelect || !saveBtn) return;
 
-    // Load current config
-    const configRef = doc(db, 'config', 'app');
-    const configSnap = await getDoc(configRef);
-    if (configSnap.exists()) {
-        semesterSelect.value = configSnap.data().activeSemester || 'Ganjil';
-    }
+    try {
+        // Load current config
+        const configRef = doc(db, 'config', 'app');
+        const configSnap = await getDoc(configRef);
+        if (configSnap.exists()) {
+            semesterSelect.value = configSnap.data().activeSemester || 'Ganjil';
+        }
 
-    saveBtn.onclick = async () => {
-        await setDoc(configRef, { activeSemester: semesterSelect.value }, { merge: true });
-        statusMsg.classList.remove('hidden');
-        setTimeout(() => statusMsg.classList.add('hidden'), 3000);
-    };
+        saveBtn.onclick = async () => {
+            try {
+                await setDoc(configRef, { activeSemester: semesterSelect.value }, { merge: true });
+                statusMsg.classList.remove('hidden');
+                setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+            } catch (err) {
+                console.error("Save config error:", err);
+                alert("Gagal menyimpan: Izin ditolak!");
+            }
+        };
+    } catch (error) {
+        console.warn("Global config load failed (likely permissions):", error);
+        // Fallback or leave default
+    }
 }
