@@ -16,6 +16,9 @@ export function initAdmin() {
     };
 }
 
+let progressUnsubscribe = null;
+let flashNoteUnsubscribe = null;
+
 function loadUsers() {
     const userTableBody = document.getElementById('user-table-body');
     if (!userTableBody) return;
@@ -105,6 +108,8 @@ function loadParentalMonitoring() {
             option.textContent = user.displayName || user.email;
             childSelect.appendChild(option);
         });
+    }, (err) => {
+        console.error("Monitoring dropdown error:", err);
     });
 
     let currentUid = null;
@@ -119,6 +124,11 @@ function loadParentalMonitoring() {
     childSelect.addEventListener('change', (e) => {
         currentUid = e.target.value;
         const flashNoteAdmin = document.getElementById('flash-note-admin-section');
+        
+        // Cleanup old listeners
+        if (progressUnsubscribe) { progressUnsubscribe(); progressUnsubscribe = null; }
+        if (flashNoteUnsubscribe) { flashNoteUnsubscribe(); flashNoteUnsubscribe = null; }
+
         if (currentUid) {
             loadForDate();
             loadFlashNoteForChild(currentUid);
@@ -149,8 +159,11 @@ function loadParentalMonitoring() {
 function loadFlashNoteForChild(uid) {
     const flashNoteInput = document.getElementById('flash-note-input');
     if (!flashNoteInput) return;
-    onSnapshot(doc(db, 'users', uid), (snap) => {
+    
+    flashNoteUnsubscribe = onSnapshot(doc(db, 'users', uid), (snap) => {
         flashNoteInput.value = snap.exists() ? (snap.data().flashNote || '') : '';
+    }, (err) => {
+        console.error("Flash note listener error:", err);
     });
 }
 
@@ -164,23 +177,30 @@ function subscribeToChildProgress(uid, date) {
     const displayDate = new Date(date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     if (dateLabel) dateLabel.textContent = displayDate;
 
-    // Coba ambil dari subcollection log per tanggal dulu, fallback ke root doc
+    // Cleanup old listener before starting new one
+    if (progressUnsubscribe) progressUnsubscribe();
+
     const logRef = doc(db, 'progress', uid, 'logs', date);
-    onSnapshot(logRef, (docSnap) => {
+    const rootRef = doc(db, 'progress', uid);
+
+    progressUnsubscribe = onSnapshot(logRef, (docSnap) => {
         if (!docSnap.exists()) {
-            // Fallback: coba root doc (data lama)
-            onSnapshot(doc(db, 'progress', uid), (rootSnap) => {
-                if (!rootSnap.exists()) {
+            // If log doesn't exist, fetch fallback once from root doc (not needed to listen continuously if it doesn't exist)
+            getDoc(rootRef).then(rootSnap => {
+                if (rootSnap.exists()) {
+                    renderProgressData(rootSnap.data(), tasksList, habitsList, lastUpdatedEl);
+                } else {
                     tasksList.innerHTML = '<li class="text-gray-400 text-sm py-2">Belum ada data untuk tanggal ini.</li>';
                     habitsList.innerHTML = '<li class="text-gray-400 text-sm py-2">Belum ada data untuk tanggal ini.</li>';
                     updateUIProgress(0, 0);
-                    return;
                 }
-                renderProgressData(rootSnap.data(), tasksList, habitsList, lastUpdatedEl);
             });
             return;
         }
         renderProgressData(docSnap.data(), tasksList, habitsList, lastUpdatedEl);
+    }, (err) => {
+        console.error("Progress listener error:", err);
+        tasksList.innerHTML = `<li class="text-red-400 text-xs py-2">Error: ${err.code}</li>`;
     });
 }
 
