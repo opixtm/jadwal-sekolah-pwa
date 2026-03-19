@@ -155,7 +155,7 @@
                             <option value="Ganjil">Semester Ganjil</option>
                             <option value="Genap">Semester Genap</option>
                         </select>
-                        <input type="text" id="input-subject" list="subject-list" placeholder="Mata Pelajaran" class="p-2 border rounded-lg">
+                        <input type="text" id="input-subject" placeholder="Mata Pelajaran" class="p-2 border rounded-lg">
                         <input type="text" id="input-teacher" list="teacher-list" placeholder="Nama Guru" class="p-2 border rounded-lg">
                         <div class="flex items-center gap-2">
                             <input type="time" id="input-time-start" class="p-2 border rounded-lg flex-1">
@@ -189,7 +189,7 @@
                     <h3 class="font-bold text-gray-900 mb-4">Daftarkan Guru Baru</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <input type="text" id="guru-name" placeholder="Nama Guru" class="p-2 border rounded-lg">
-                        <input type="text" id="guru-subject" list="subject-list" placeholder="Mata Pelajaran" class="p-2 border rounded-lg">
+                        <input type="text" id="guru-subject" placeholder="Mata Pelajaran" class="p-2 border rounded-lg">
                         <input type="text" id="guru-phone" placeholder="No. WhatsApp" class="p-2 border rounded-lg">
                         <button id="save-guru-btn" class="bg-green-600 text-white rounded-lg p-2 font-bold hover:bg-green-700">Simpan Guru</button>
                     </div>
@@ -427,7 +427,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Mata Pelajaran</label>
-                                <input type="text" id="user-input-subject" list="subject-list" class="p-3 border border-gray-200 rounded-xl outline-none bg-white w-full" placeholder="Cari/Ketik...">
+                                <input type="text" id="user-input-subject" class="p-3 border border-gray-200 rounded-xl outline-none bg-white w-full" placeholder="Cari/Ketik...">
                             </div>
                             <div>
                                 <label class="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Nama Guru</label>
@@ -631,20 +631,6 @@
             });
         };
     </script>
-        <!-- Global Datalists for Suggestions -->
-        <datalist id="subject-list">
-            <option value="Matematika"></option>
-            <option value="Bahasa Indonesia"></option>
-            <option value="Bahasa Inggris"></option>
-            <option value="IPA"></option>
-            <option value="IPS"></option>
-            <option value="Agama"></option>
-            <option value="PKn"></option>
-            <option value="SBDP"></option>
-            <option value="Olahraga"></option>
-            <option value="TIK"></option>
-            <option value="Lingkungan Hidup"></option>
-        </datalist>
         <datalist id="teacher-list">
             <!-- Dynamically populated from contacts -->
         </datalist>
