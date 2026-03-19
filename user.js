@@ -46,6 +46,17 @@ async function compressImage(base64Str) {
     });
 }
 
+// Returns today's date string YYYY-MM-DD
+function getTodayDate() {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+}
+
+// Returns Firestore ref for today's daily log
+function todayLogRef() {
+    return doc(db, 'progress', currentUserId, 'logs', getTodayDate());
+}
+
 function loadSchedule() {
     const jadwalList = document.getElementById('jadwal-list');
     const ujianList = document.getElementById('ujian-list');
