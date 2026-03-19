@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'jadwal-v1.0.2'; // Incremented version to force update
+const CACHE_NAME = 'jadwal-v1.0.3'; // Forced update to clear old problematic config
 const ASSETS = [
   './',
   './index.html',
