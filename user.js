@@ -151,7 +151,7 @@ function loadSchedule() {
                     </div>
                     <div>
                         <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">${item.time}</div>
-                        <div class="font-bold text-indigo-600 cursor-pointer hover:underline" onclick="window.viewSubjectDetail('${item.subject.replace(/'/g, "\\'")}', '${item.teacher.replace(/'/g, "\\'")}')">${item.subject}</div>
+                        <div class="font-bold text-indigo-600 cursor-pointer hover:underline" onclick="window.viewSubjectDetailUser('${item.subject.replace(/'/g, "\\'")}', '${item.teacher.replace(/'/g, "\\'")}')">${item.subject}</div>
                         <div class="text-xs text-gray-500">${item.teacher}</div>
                     </div>
                 `;
@@ -695,7 +695,7 @@ window.deleteUserJadwal = async (id) => {
     }
 };
 
-window.viewSubjectDetail = async (subjectName, teacherName) => {
+window.viewSubjectDetailUser = async (subjectName, teacherName) => {
     const modal = document.getElementById('modal-subject-detail');
     const nameEl = document.getElementById('detail-subject-name');
     const teacherEl = document.getElementById('detail-subject-teacher');

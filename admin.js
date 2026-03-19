@@ -333,7 +333,7 @@ function loadScheduleManager() {
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.day}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div class="font-bold text-indigo-600 cursor-pointer hover:underline" onclick="window.viewSubjectDetail('${item.subject.replace(/'/g, "\\'")}', '${item.teacher.replace(/'/g, "\\'")}')">${item.subject}</div>
+                    <div class="font-bold text-indigo-600 cursor-pointer hover:underline" onclick="window.viewSubjectDetailAdmin('${item.subject.replace(/'/g, "\\'")}', '${item.teacher.replace(/'/g, "\\'")}')">${item.subject}</div>
                     <div class="text-xs text-gray-400">${item.teacher}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-bold">
@@ -460,7 +460,7 @@ window.deleteJadwal = async (id) => {
     }
 };
 
-window.viewSubjectDetail = async (subjectName, teacherName) => {
+window.viewSubjectDetailAdmin = async (subjectName, teacherName) => {
     // If we're in admin mode, we need to know WHICH child's breakdown to show.
     // We try to take it from the active monitoring selection.
     const childId = document.getElementById('child-select')?.value;
