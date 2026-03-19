@@ -191,6 +191,7 @@ function loadScheduleManager() {
                 teacher,
                 time,
                 day,
+                userId: 'common',
                 createdAt: new Date()
             });
             // Clear inputs

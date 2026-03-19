@@ -125,6 +125,8 @@
                             <option value="Rabu">Rabu</option>
                             <option value="Kamis">Kamis</option>
                             <option value="Jumat">Jumat</option>
+                            <option value="Sabtu">Sabtu</option>
+                            <option value="Minggu">Minggu</option>
                         </select>
                         <button id="save-jadwal-btn" class="bg-indigo-600 text-white rounded-lg p-2 hover:bg-indigo-700 transition-all">Simpan Jadwal</button>
                     </div>
@@ -201,23 +203,26 @@
 
             <!-- User Tabs (Mobile Optimized Bottom Nav style or Top tabs) -->
             <div id="user-tabs" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide py-3">
-                <button id="btn-tab-jadwal" class="px-5 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-semibold shadow-md whitespace-nowrap">
+                <button onclick="switchTab('jadwal')" id="btn-tab-jadwal" class="tab-btn px-5 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-semibold shadow-md whitespace-nowrap transition-all">
                     <i class="fas fa-calendar-day mr-2"></i> Jadwal
                 </button>
-                <button id="btn-tab-tasks" class="px-5 py-2.5 bg-white text-gray-600 rounded-full text-sm font-semibold shadow-sm whitespace-nowrap">
+                <button onclick="switchTab('tasks')" id="btn-tab-tasks" class="tab-btn px-5 py-2.5 bg-gray-100 text-gray-500 rounded-full text-sm font-semibold shadow-sm whitespace-nowrap transition-all">
                     <i class="fas fa-tasks mr-2"></i> Tugas
                 </button>
-                <button id="btn-tab-habits" class="px-5 py-2.5 bg-white text-gray-600 rounded-full text-sm font-semibold shadow-sm whitespace-nowrap">
-                    <i class="fas fa-star mr-2"></i> Kebiasaan
+                <button onclick="switchTab('habits')" id="btn-tab-habits" class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-500 flex-shrink-0 transition-all">
+                    <i class="fas fa-check-circle mr-2"></i> Kebiasaan
                 </button>
-                <button id="btn-tab-kontak" class="px-5 py-2.5 bg-white text-gray-600 rounded-full text-sm font-semibold shadow-sm whitespace-nowrap">
+                <button onclick="switchTab('manage')" id="btn-tab-manage" class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-500 flex-shrink-0 transition-all">
+                    <i class="fas fa-edit mr-2"></i> Kelola
+                </button>
+                <button onclick="switchTab('kontak')" id="btn-tab-kontak" class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-500 flex-shrink-0 transition-all">
                     <i class="fas fa-address-book mr-2"></i> Kontak
                 </button>
             </div>
 
             <!-- Tab contents -->
             <!-- 1. Jadwal & Kalender -->
-            <div id="user-content-jadwal" class="space-y-4">
+            <div id="content-jadwal" class="tab-content space-y-4">
                 <h3 class="font-bold text-gray-900 border-l-4 border-indigo-500 pl-3">Jadwal Hari Ini</h3>
                 <div id="jadwal-list" class="grid gap-3">
                     <!-- Cards will be injected -->
@@ -230,7 +235,7 @@
             </div>
 
             <!-- 2. Task Tracker -->
-            <div id="user-content-tasks" class="hidden space-y-4">
+            <div id="content-tasks" class="tab-content hidden space-y-4">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-gray-900 border-l-4 border-blue-500 pl-3">Daftar Tugas & PR</h3>
                     <button id="add-task-btn" class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg text-sm font-bold">+ Baru</button>
@@ -240,16 +245,54 @@
                 </div>
             </div>
 
-            <!-- 3. Habit Tracker -->
-            <div id="user-content-habits" class="hidden space-y-4">
-                <h3 class="font-bold text-gray-900 border-l-4 border-green-500 pl-3">Ibadah & Rutinitas</h3>
-                <div id="habits-list" class="grid gap-3">
-                    <!-- Habits will be injected -->
+            <!-- Tab Content: Kebiasaan -->
+            <div id="content-habits" class="tab-content hidden space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-gray-800">Ceklis Harian</h3>
+                </div>
+                <div id="habits-list" class="space-y-3">
+                    <!-- Injected -->
                 </div>
             </div>
 
-            <!-- 4. Kontak -->
-            <div id="user-content-kontak" class="hidden space-y-6">
+            <!-- Tab Content: Kelola Jadwal (User) -->
+            <div id="content-manage" class="tab-content hidden space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-800 mb-4">Tambah Kegiatan Rumah</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <input type="text" id="user-input-subject" placeholder="Kegiatan (Ex: Mengaji)" class="p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <input type="text" id="user-input-time" placeholder="Jam (Ex: 18:00 - 19:00)" class="p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <select id="user-input-day" class="p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
+                            <option value="Sabtu">Sabtu</option>
+                            <option value="Minggu">Minggu</option>
+                        </select>
+                        <button id="user-save-jadwal-btn" class="bg-indigo-600 text-white rounded-xl p-3 font-bold shadow-indigo-200 shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">Simpan Kegiatan</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HARI</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KEGIATAN</th>
+                                <th class="px-4 py-3 text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-manage-jadwal-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: Kontak -->
+            <div id="content-kontak" class="tab-content hidden space-y-6">
                 <div>
                     <h3 class="font-bold text-gray-900 border-l-4 border-red-400 pl-3 mb-3">Guru</h3>
                     <div id="kontak-guru" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
@@ -319,21 +362,33 @@
         }
 
         // Tab switching logic for User
-        const userTabs = ['jadwal', 'tasks', 'habits', 'kontak'];
-        userTabs.forEach(tab => {
-            document.getElementById(`btn-tab-${tab}`)?.addEventListener('click', () => {
-                userTabs.forEach(t => {
-                    document.getElementById(`user-content-${t}`).classList.add('hidden');
-                    const btn = document.getElementById(`btn-tab-${t}`);
-                    btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
-                    btn.classList.add('bg-white', 'text-gray-600', 'shadow-sm');
-                });
-                document.getElementById(`user-content-${tab}`).classList.remove('hidden');
-                const activeBtn = document.getElementById(`btn-tab-${tab}`);
-                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
-                activeBtn.classList.remove('bg-white', 'text-gray-600', 'shadow-sm');
+        const userTabs = ['jadwal', 'tasks', 'habits', 'manage', 'kontak'];
+        
+        window.switchTab = (tabId) => {
+            // Hide all contents
+            userTabs.forEach(id => {
+                const target = document.getElementById(`content-${id}`);
+                if (target) target.classList.add('hidden');
             });
-        });
+            
+            // Show target content
+            const activeContent = document.getElementById(`content-${tabId}`);
+            if (activeContent) activeContent.classList.remove('hidden');
+            
+            // Update buttons
+            userTabs.forEach(id => {
+                const btn = document.getElementById(`btn-tab-${id}`);
+                if (btn) {
+                    if (id === tabId) {
+                        btn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                        btn.classList.remove('bg-gray-100', 'text-gray-500', 'shadow-sm');
+                    } else {
+                        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                        btn.classList.add('bg-gray-100', 'text-gray-500', 'shadow-sm');
+                    }
+                }
+            });
+        };
     </script>
 </body>
 </html>

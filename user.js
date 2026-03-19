@@ -1,6 +1,6 @@
 // user.js
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection, query, where, orderBy, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentUserId = null;
 
@@ -11,6 +11,7 @@ export function initUser() {
     loadTasks();
     loadHabits();
     loadContacts();
+    loadUserScheduleManager();
 }
 
 function loadSchedule() {
@@ -24,8 +25,15 @@ function loadSchedule() {
     // Set placeholder while loading
     if (jadwalList) jadwalList.innerHTML = '<p class="text-gray-400 text-center py-4">Memuat jadwal...</p>';
 
-    // Fetch from Firestore
-    const q = query(collection(db, "schedules"), where("day", "==", today), orderBy("time"));
+    // Fetch from Firestore: Common (School) + Own (Home)
+    const q = query(
+        collection(db, "schedules"), 
+        where("day", "==", today), 
+        where("userId", "in", ["common", currentUserId])
+    );
+    
+    // NOTE: This query REQUIRES a composite index (day ASC, userId ASC) iforderBy is used.
+    // To avoid waiting for another index, we'll sort in JS or use simpler query.
     onSnapshot(q, (snapshot) => {
         if (jadwalList) {
             if (snapshot.empty) {
@@ -187,5 +195,72 @@ window.toggleHabit = async (index) => {
         const habits = docSnap.data().habits;
         habits[index].completed = !habits[index].completed;
         await setDoc(docRef, { habits: habits }, { merge: true });
+    }
+};
+
+// --- User Schedule Management (Home Activities) ---
+function loadUserScheduleManager() {
+    const tableBody = document.getElementById('user-manage-jadwal-table-body');
+    const saveBtn = document.getElementById('user-save-jadwal-btn');
+
+    if (!tableBody || !saveBtn) return;
+
+    // Listen to MY schedules (only those I created)
+    const q = query(
+        collection(db, "schedules"), 
+        where("userId", "==", currentUserId),
+        orderBy("day")
+    );
+
+    onSnapshot(q, (snapshot) => {
+        tableBody.innerHTML = '';
+        snapshot.forEach((docSnap) => {
+            const item = docSnap.data();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${item.day}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <div class="font-bold">${item.subject}</div>
+                    <div class="text-[10px] text-gray-400">${item.time}</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="window.deleteUserJadwal('${docSnap.id}')" class="text-red-500 p-1"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    });
+
+    saveBtn.onclick = async () => {
+        const subject = document.getElementById('user-input-subject').value;
+        const time = document.getElementById('user-input-time').value;
+        const day = document.getElementById('user-input-day').value;
+
+        if (!subject || !time) {
+            alert("Nama Kegiatan dan Jam wajib diisi!");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "schedules"), {
+                subject,
+                teacher: "Kegiatan Rumah",
+                time,
+                day,
+                userId: currentUserId,
+                createdAt: new Date()
+            });
+            // Clear inputs
+            document.getElementById('user-input-subject').value = '';
+            document.getElementById('user-input-time').value = '';
+        } catch (error) {
+            console.error("Error adding user schedule:", error);
+        }
+    };
+}
+
+window.deleteUserJadwal = async (id) => {
+    if (confirm("Hapus kegiatan ini?")) {
+        await deleteDoc(doc(db, "schedules", id));
     }
 };
