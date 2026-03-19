@@ -19,9 +19,12 @@ const auth = getAuth(app);
 
 // Use initializeFirestore with force long polling to fix CORS/Listen errors
 import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+console.log("🔥 Initializing Firestore with Force Long Polling standard...");
 const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true
+  experimentalForceLongPolling: true,
+  useFetchStreams: false // Also avoid streams which can trigger CORS/Access issues
 });
+console.log("✅ Firestore initialized.");
 
 const provider = new GoogleAuthProvider();
 

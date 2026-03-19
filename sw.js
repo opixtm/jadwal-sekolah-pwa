@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'jadwal-v1.0.4'; // Final forced update - Please check v1.0.4 label in UI
+const CACHE_NAME = 'jadwal-v1.0.5'; // Final forced update - Please check v1.0.5 label in UI
 const ASSETS = [
   './',
   './index.html',
