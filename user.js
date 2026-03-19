@@ -151,7 +151,7 @@ function loadSchedule() {
                     </div>
                     <div>
                         <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">${item.time}</div>
-                        <div class="font-bold text-gray-900">${item.subject}</div>
+                        <div class="font-bold text-indigo-600 cursor-pointer hover:underline" onclick="window.viewSubjectDetail('${item.subject.replace(/'/g, "\\'")}', '${item.teacher.replace(/'/g, "\\'")}')">${item.subject}</div>
                         <div class="text-xs text-gray-500">${item.teacher}</div>
                     </div>
                 `;
@@ -692,5 +692,94 @@ window.closeModal = (id) => {
 window.deleteUserJadwal = async (id) => {
     if (confirm("Hapus kegiatan ini?")) {
         await deleteDoc(doc(db, "schedules", id));
+    }
+};
+
+window.viewSubjectDetail = async (subjectName, teacherName) => {
+    const modal = document.getElementById('modal-subject-detail');
+    const nameEl = document.getElementById('detail-subject-name');
+    const teacherEl = document.getElementById('detail-subject-teacher');
+    const iconEl = document.getElementById('detail-subject-icon');
+    const tasksList = document.getElementById('detail-tasks-list');
+    const examsList = document.getElementById('detail-exams-list');
+    const tasksCount = document.getElementById('detail-tasks-count');
+    const examsCount = document.getElementById('detail-exams-count');
+
+    if (!modal) return;
+
+    // Set Header
+    nameEl.textContent = subjectName;
+    teacherEl.textContent = teacherName || 'Guru Mata Pelajaran';
+    iconEl.textContent = subjectName.charAt(0).toUpperCase();
+    
+    // Clear Lists
+    tasksList.innerHTML = '<p class="text-gray-400 text-xs text-center py-2 italic font-medium">Buka menu "Tugas" untuk mengelola tugas secara lengkap.</p>';
+    examsList.innerHTML = '';
+    tasksCount.textContent = '0';
+    examsCount.textContent = '0';
+
+    window.openModal('subject-detail');
+
+    try {
+        // Fetch all data for this user
+        const docRef = doc(db, 'progress', currentUserId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const allTasks = data.tasks || [];
+            const allExams = data.exams || [];
+
+            // Filter by subject name (case insensitive match)
+            const subjectTasks = allTasks.filter(t => 
+                (t.title && t.title.toLowerCase().includes(subjectName.toLowerCase())) ||
+                (t.name && t.name.toLowerCase().includes(subjectName.toLowerCase())) ||
+                (t.category && t.category.toLowerCase().includes(subjectName.toLowerCase()))
+            );
+
+            const subjectExams = allExams.filter(e => 
+                (e.name && e.name.toLowerCase().includes(subjectName.toLowerCase()))
+            );
+
+            // Render Tasks
+            if (subjectTasks.length > 0) {
+                tasksList.innerHTML = '';
+                subjectTasks.forEach(t => {
+                    const li = document.createElement('div');
+                    li.className = `p-3 rounded-xl border flex items-center justify-between ${t.completed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-blue-50/30 border-blue-100'}`;
+                    li.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full ${t.completed ? 'bg-gray-300' : 'bg-blue-500'}"></div>
+                            <span class="text-sm font-bold text-gray-800 ${t.completed ? 'line-through' : ''}">${t.title || t.name}</span>
+                        </div>
+                        ${t.completed ? '✅' : ''}
+                    `;
+                    tasksList.appendChild(li);
+                });
+                tasksCount.textContent = subjectTasks.length;
+            }
+
+            // Render Exams
+            if (subjectExams.length > 0) {
+                examsList.innerHTML = '';
+                subjectExams.forEach(e => {
+                    const li = document.createElement('div');
+                    li.className = 'p-3 rounded-xl bg-yellow-50 border border-yellow-100 flex items-center gap-3';
+                    li.innerHTML = `
+                        <div class="text-yellow-600 font-black flex-shrink-0 text-xs">⚠️</div>
+                        <div>
+                            <div class="text-sm font-black text-gray-900">${e.name}</div>
+                            <div class="text-[10px] font-bold text-yellow-700 uppercase">${new Date(e.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} • ${e.time || ''}</div>
+                        </div>
+                    `;
+                    examsList.appendChild(li);
+                });
+                examsCount.textContent = subjectExams.length;
+            } else {
+                examsList.innerHTML = '<p class="text-gray-400 text-xs text-center py-2 italic font-medium">Buka menu "Jadwal" untuk melihat atau tambah pengingat ujian.</p>';
+            }
+        }
+    } catch (error) {
+        console.error("Error loading subject details:", error);
     }
 };

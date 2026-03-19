@@ -333,7 +333,7 @@ function loadScheduleManager() {
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.day}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div class="font-bold">${item.subject}</div>
+                    <div class="font-bold text-indigo-600 cursor-pointer hover:underline" onclick="window.viewSubjectDetail('${item.subject.replace(/'/g, "\\'")}', '${item.teacher.replace(/'/g, "\\'")}')">${item.subject}</div>
                     <div class="text-xs text-gray-400">${item.teacher}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-bold">
@@ -458,6 +458,103 @@ window.deleteJadwal = async (id) => {
     if (confirm("Hapus jadwal ini?")) {
         await deleteDoc(doc(db, "schedules", id));
     }
+};
+
+window.viewSubjectDetail = async (subjectName, teacherName) => {
+    // If we're in admin mode, we need to know WHICH child's breakdown to show.
+    // We try to take it from the active monitoring selection.
+    const childId = document.getElementById('child-select')?.value;
+    
+    if (!childId) {
+        alert("Pilih anak di tab 'Monitoring Ortu' terlebih dahulu untuk melihat breakdown tugas/ujian mereka.");
+        // Try to switch to monitoring tab for user
+        document.getElementById('tab-monitoring-btn')?.click();
+        return;
+    }
+
+    const modal = document.getElementById('modal-subject-detail');
+    if (!modal) return;
+
+    // Reset UI
+    document.getElementById('detail-subject-name').textContent = subjectName;
+    document.getElementById('detail-subject-teacher').textContent = teacherName || 'Guru';
+    document.getElementById('detail-subject-icon').textContent = subjectName.charAt(0).toUpperCase();
+    const tasksList = document.getElementById('detail-tasks-list');
+    const examsList = document.getElementById('detail-exams-list');
+    tasksList.innerHTML = '<p class="text-gray-400 text-xs text-center py-2 italic font-medium">Buka menu "Monitoring" untuk monitoring secara lengkap.</p>';
+    examsList.innerHTML = '';
+    document.getElementById('detail-tasks-count').textContent = '0';
+    document.getElementById('detail-exams-count').textContent = '0';
+
+    // Show modal
+    modal.classList.remove('hidden');
+
+    try {
+        const docRef = doc(db, 'progress', childId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const allTasks = data.tasks || [];
+            const allExams = data.exams || [];
+
+            const subjectTasks = allTasks.filter(t => 
+                (t.title && t.title.toLowerCase().includes(subjectName.toLowerCase())) ||
+                (t.name && t.name.toLowerCase().includes(subjectName.toLowerCase())) ||
+                (t.category && t.category.toLowerCase().includes(subjectName.toLowerCase()))
+            );
+
+            const subjectExams = allExams.filter(e => 
+                (e.name && e.name.toLowerCase().includes(subjectName.toLowerCase()))
+            );
+
+            if (subjectTasks.length > 0) {
+                tasksList.innerHTML = '';
+                subjectTasks.forEach(t => {
+                    const li = document.createElement('div');
+                    li.className = `p-3 rounded-xl border flex items-center justify-between ${t.completed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-blue-50/30 border-blue-100'}`;
+                    li.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full ${t.completed ? 'bg-gray-300' : 'bg-blue-500'}"></div>
+                            <span class="text-sm font-bold text-gray-800 ${t.completed ? 'line-through' : ''}">${t.title || t.name}</span>
+                        </div>
+                        ${t.completed ? '✅' : ''}
+                    `;
+                    tasksList.appendChild(li);
+                });
+                document.getElementById('detail-tasks-count').textContent = subjectTasks.length;
+            }
+
+            if (subjectExams.length > 0) {
+                examsList.innerHTML = '';
+                subjectExams.forEach(e => {
+                    const li = document.createElement('div');
+                    li.className = 'p-3 rounded-xl bg-yellow-50 border border-yellow-100 flex items-center gap-3';
+                    li.innerHTML = `
+                        <div class="text-yellow-600 font-black flex-shrink-0 text-xs">⚠️</div>
+                        <div>
+                            <div class="text-sm font-black text-gray-900">${e.name}</div>
+                            <div class="text-[10px] font-bold text-yellow-700 uppercase">${new Date(e.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} • ${e.time || ''}</div>
+                        </div>
+                    `;
+                    examsList.appendChild(li);
+                });
+                document.getElementById('detail-exams-count').textContent = subjectExams.length;
+            } else {
+                examsList.innerHTML = '<p class="text-gray-400 text-xs text-center py-2 italic font-medium">Tidak ada ujian mendatang untuk mata pelajaran ini.</p>';
+            }
+        }
+    } catch (error) {
+        console.error("Monitoring detail error:", error);
+    }
+};
+
+window.openModal = (id) => {
+    document.getElementById(`modal-${id}`).classList.remove('hidden');
+};
+
+window.closeModal = (id) => {
+    document.getElementById(`modal-${id}`).classList.add('hidden');
 };
 
 window.deleteUser = async (id) => {
