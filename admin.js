@@ -135,8 +135,10 @@ function subscribeToChildProgress(uid) {
         renderMonitoringList(habitsList, habits);
 
         const total = tasks.length + habits.length;
-        const done = [...tasks, ...habits].filter(item => item.completed).length;
-        updateUIProgress(done, total);
+        const done = [...tasks, ...habits].filter(item => item.done || item.completed).length;
+        const lastUpdated = data.updatedAt ? new Date(data.updatedAt.toDate()).toLocaleString('id-ID') : 'Belum update';
+        
+        updateUIProgress(done, total, lastUpdated);
     });
 }
 
@@ -173,11 +175,21 @@ function renderMonitoringList(container, items) {
     });
 }
 
-function updateUIProgress(done, total) {
+function updateUIProgress(done, total, lastUpdated) {
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
     document.getElementById('progress-bar-inner').style.width = `${percent}%`;
     document.getElementById('progress-percent').textContent = `${percent}%`;
     document.getElementById('progress-ratio').textContent = `${done}/${total} Selesai`;
+    
+    // Add timestamp display if exists
+    let tsLabel = document.getElementById('progress-timestamp');
+    if (!tsLabel) {
+        tsLabel = document.createElement('div');
+        tsLabel.id = 'progress-timestamp';
+        tsLabel.className = 'text-[10px] text-gray-400 text-center mt-2';
+        document.getElementById('content-monitoring').querySelector('.bg-white.p-6')?.appendChild(tsLabel);
+    }
+    tsLabel.textContent = `Update Terakhir: ${lastUpdated}`;
 }
 
 // --- Schedule Management ---
