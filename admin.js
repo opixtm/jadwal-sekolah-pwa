@@ -61,6 +61,8 @@ function loadUsers() {
             `;
             userTableBody.appendChild(tr);
         });
+    }, (err) => {
+        console.error("User list listener error:", err);
     });
 }
 
@@ -69,24 +71,6 @@ function getStatusColor(role) {
     if (role === 'Approved') return 'bg-green-100 text-green-800';
     return 'bg-yellow-100 text-yellow-800';
 }
-
-window.updateRole = async (uid, newRole) => {
-    try {
-        await updateDoc(doc(db, 'users', uid), { role: newRole });
-    } catch (err) {
-        console.error("Error updating role:", err);
-    }
-};
-
-window.removeUser = async (uid) => {
-    if (confirm('Hapus akun ini?')) {
-        try {
-            await deleteDoc(doc(db, 'users', uid));
-        } catch (err) {
-            console.error("Error removing user:", err);
-        }
-    }
-};
 
 function loadParentalMonitoring() {
     const childSelect = document.getElementById('child-select');
@@ -334,6 +318,8 @@ function loadScheduleManager() {
             `;
             tableBody.appendChild(row);
         });
+    }, (err) => {
+        console.error("Schedule manager listener error:", err);
     });
 
     saveBtn.onclick = async () => {
@@ -394,6 +380,8 @@ function loadTeacherManager() {
             `;
             tableBody.appendChild(row);
         });
+    }, (err) => {
+        console.error("Teacher manager listener error:", err);
     });
 
     saveBtn.onclick = async () => {
