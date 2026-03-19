@@ -130,20 +130,26 @@ function loadExams() {
         exams.sort((a,b) => new Date(a.date) - new Date(b.date));
 
         exams.forEach(exam => {
-            const dateObj = new Date(exam.date);
+            const dateObj = new Date(exam.date + 'T00:00:00');
             const day = dateObj.getDate();
             const month = dateObj.toLocaleString('id-ID', { month: 'short' }).toUpperCase();
+            const timeLabel = exam.time ? `<span class="font-bold text-yellow-600">⏰ ${exam.time}</span>` : '';
+            const notesLabel = exam.notes ? `<div class="text-xs text-gray-400 italic mt-0.5">${exam.notes}</div>` : '';
             
             const card = document.createElement('div');
             card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group';
             card.innerHTML = `
-                <div class="bg-yellow-50 text-yellow-600 w-12 h-12 rounded-xl flex flex-col items-center justify-center border border-yellow-100">
+                <div class="bg-yellow-50 text-yellow-600 w-12 h-12 rounded-xl flex flex-col items-center justify-center border border-yellow-100 flex-shrink-0">
                     <div class="text-[10px] font-bold uppercase leading-none">${month}</div>
                     <div class="text-xl font-black leading-none">${day}</div>
                 </div>
                 <div class="flex-1">
                     <div class="font-bold text-gray-900">${exam.name}</div>
-                    <div class="text-xs text-gray-500">Tipe: ${exam.type}</div>
+                    <div class="text-xs text-gray-500 flex flex-wrap gap-2 mt-0.5">
+                        <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-bold">${exam.type}</span>
+                        ${timeLabel}
+                    </div>
+                    ${notesLabel}
                 </div>
             `;
             ujianList.appendChild(card);
@@ -563,9 +569,11 @@ function initModals() {
     const saveExamBtn = document.getElementById('btn-save-exam');
     if (saveExamBtn) {
         saveExamBtn.onclick = async () => {
-            const name = document.getElementById('exam-name').value;
+            const name = document.getElementById('exam-name').value.trim();
             const type = document.getElementById('exam-type').value;
             const date = document.getElementById('exam-date').value;
+            const time = document.getElementById('exam-time')?.value || '';
+            const notes = document.getElementById('exam-notes')?.value.trim() || '';
 
             if (!name || !date) {
                 alert("Nama Ujian dan Tanggal wajib diisi!");
@@ -575,12 +583,7 @@ function initModals() {
             const docRef = doc(db, 'progress', currentUserId);
             const docSnap = await getDoc(docRef);
             
-            const newExam = {
-                name: name,
-                type: type,
-                date: date,
-                createdAt: new Date().toISOString()
-            };
+            const newExam = { name, type, date, time, notes, createdAt: new Date().toISOString() };
 
             const data = docSnap.exists() ? docSnap.data() : {};
             const exams = data.exams || [];
@@ -588,9 +591,12 @@ function initModals() {
             await setDoc(docRef, { ...data, exams }, { merge: true });
 
             window.closeModal('exam');
-            // Reset fields
             document.getElementById('exam-name').value = '';
             document.getElementById('exam-date').value = '';
+            const examTimeEl = document.getElementById('exam-time');
+            if (examTimeEl) examTimeEl.value = '';
+            const examNotesEl = document.getElementById('exam-notes');
+            if (examNotesEl) examNotesEl.value = '';
         };
     }
 }
