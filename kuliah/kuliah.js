@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const response = await fetch('./kuliah_parsed.json');
+        const response = await fetch('/kuliah/kuliah_parsed.json');
         if(!response.ok) throw new Error("Gagal mengambil data jadwal");
         
         const data = await response.json();
