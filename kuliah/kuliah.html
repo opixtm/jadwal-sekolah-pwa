@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Mahasiswa - Sistem Blok</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="theme-color" content="#4F46E5">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        indigo: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .accordion-content { 
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease; 
+            max-height: 0; 
+            opacity: 0;
+            overflow: hidden; 
+        }
+        .accordion-open .accordion-content { 
+            max-height: 2000px; 
+            opacity: 1;
+        }
+        .icon-rotate { transition: transform 0.3s ease; }
+        .accordion-open .icon-rotate { transform: rotate(180deg); }
+        .card-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen pb-20">
+
+    <!-- Header / Navbar -->
+    <header class="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-graduation-cap text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl tracking-tight leading-tight">Jadwal Kuliah</h1>
+                    <p class="text-xs text-indigo-200">Mode Sistem Blok & Silabus</p>
+                </div>
+            </div>
+            <button class="text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-all">
+                <i class="fas fa-ellipsis-v px-1"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto p-4 mt-2">
+        <!-- Hero Information Card -->
+        <div class="bg-white rounded-2xl p-5 card-shadow mb-6 border border-gray-100 relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-50 rounded-full opacity-50"></div>
+            <h2 class="text-xs font-bold text-indigo-600 tracking-wider uppercase mb-1">Semester Aktif</h2>
+            <h3 class="text-2xl font-extrabold text-gray-900 mb-2" id="block-title">Pengenalan Blok XVIII</h3>
+            <p class="text-sm text-gray-500 font-medium"><i class="far fa-calendar-alt mr-1"></i> Jadwal di-generate dari dokumen RAW (Data Flow).</p>
+            
+            <div class="mt-4 flex gap-2">
+                <div class="bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                    <span class="text-xs font-bold text-indigo-700"><i class="fas fa-file-word mr-1"></i> jadwal 2023.doc</span>
+                </div>
+                <div class="bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
+                    <span class="text-xs font-bold text-green-700" id="stats-badge">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-end mb-4 px-1">
+            <h3 class="font-bold text-gray-800 text-lg">Timeline Mingguan</h3>
+            <button id="expand-all-btn" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition-all">Expand All</button>
+        </div>
+
+        <!-- Accordion Container -->
+        <div id="syllabus-container" class="space-y-4">
+            <!-- Loading Indicator -->
+            <div class="text-center py-10 opacity-50">
+                <i class="fas fa-circle-notch fa-spin text-3xl text-indigo-600 mb-3"></i>
+                <p class="text-sm font-medium">Memuat dan mem-parsing jadwal...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- PWA Bottom Navigation (Mockup structure matching user's main app style) -->
+    <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 pb-safe z-50">
+        <div class="max-w-3xl mx-auto flex justify-around">
+            <button class="flex flex-col items-center py-3 px-6 text-indigo-600">
+                <i class="fas fa-stream text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">Silabus</span>
+            </button>
+            <button class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-indigo-600 transition-colors">
+                <i class="far fa-calendar-check text-xl mb-1 mt-0.5"></i>
+                <span class="text-[10px] font-bold">Kalender</span>
+            </button>
+            <button class="flex flex-col items-center py-3 px-6 text-gray-400 hover:text-indigo-600 transition-colors">
+                <i class="far fa-user text-xl mb-1 mt-0.5"></i>
+                <span class="text-[10px] font-bold">Profil</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="kuliah.js"></script>
+</body>
+</html>

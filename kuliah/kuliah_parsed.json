@@ -1,0 +1,186 @@
+[
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "1",
+        "kode": "KP 1.1 (A&B)",
+        "materi": "Pengenalan Blok XVIII",
+        "dosen": "drg. Lenny Sang Surya, MKM"
+    },
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "2",
+        "kode": "KP 1.2 A",
+        "materi": "Mahasiswa mampu menjelaskan dan memahami metodologi Penelitian",
+        "dosen": "Dr.drg. Dhona Apriza, M.Biomed | KP 1.2 B | Mahasiswa mampu menjelaskan dan memahami metodologi Penelitian | Dr.drg. Dhona Apriza, M.Biomed"
+    },
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "3",
+        "kode": "KP 1.3 A",
+        "materi": "Mahasiswa mampu memilih dan menentukan rancangan metode penelitian epidemiologi",
+        "dosen": "Dr.drg. Dhona Apriza, M.Biomed | KP 1.3 B | Mahasiswa mampu memilih dan menentukan rancangan metode penelitian epidemiologi | Dr.drg. Dhona Apriza, M.Biomed"
+    },
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "4",
+        "kode": "KP 1.4 A",
+        "materi": "Mahasiswa mampu memilih dan menentukan rancangan penelitian Eksperimen",
+        "dosen": "drg. Lenny Sang Surya, MKM | KP 1.4 B | Mahasiswa mampu memilih dan menentukan rancangan penelitian Eksperimen | drg. Lenny Sang Surya, MKM"
+    },
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "5",
+        "kode": "KP 1.5 A",
+        "materi": "Mahasiswa mampu memahami dan menelaah artikel ilmiah",
+        "dosen": "drg. Lenny Sang Surya, MKM | KP 1.5 B | Mahasiswa mampu memahami dan menelaah artikel ilmiah | drg. Lenny Sang Surya, MKM"
+    },
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "6",
+        "kode": "SL 2.1 A",
+        "materi": "Mahasiswa Mampu melakukan manajemen data, analisis data deskriptif dan Uji Normalitas",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si | SL 2.1 B | Mahasiswa Mampu melakukan manajemen data, analisis data deskriptif dan Uji Normalitas | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si"
+    },
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "7",
+        "kode": "SL 2.2 A",
+        "materi": "Mahasiswa Mampu melakukan Uji Validitas & Reliabilitas",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si | SL 2.2 B | Mahasiswa Mampu melakukan Uji Validitas & Reliabilitas | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si"
+    },
+    {
+        "minggu": "Minggu I",
+        "rentang_tanggal": "23 Februari 2026 \u2013 28 Februari 2026",
+        "no": "8",
+        "kode": "A & B",
+        "materi": "Pleno 1",
+        "dosen": "drg. Lenny Sang Surya, MKM (Pj. Blok) | Azmil Hadi,drg. Sp.Ort (Sekretaris Blok) | Dr.drg. Dhona Apriza, M.Biomed (Pakar Skenario 1)"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "1",
+        "kode": "KP 2.6 A",
+        "materi": "Mahasiswa Mampu Memahami Validitas & Reliabilitas dan Bioetika penelitian",
+        "dosen": "drg. Lenny Sang Surya, MKM | KP 2.6 B | Mahasiswa Mampu Memahami Validitas & Reliabilitas dan Bioetika penelitian | drg. Lenny Sang Surya, MKM"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "2",
+        "kode": "KP 2.7 A",
+        "materi": "Mahasiswa Mampu memahami ruang lingkup dan konsep dasar statistik kesehatan",
+        "dosen": "drg. Lenny Sang Surya, MKM | KP 2.7 B | Mahasiswa Mampu memahami ruang lingkup dan konsep dasar statistik kesehatan | drg. Lenny Sang Surya, MKM"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "3",
+        "kode": "KP 2.8 A",
+        "materi": "Mahasiswa Mampu memahami tahap kegiatan statistik, konsep data, manajemen data dan analisis data",
+        "dosen": "drg. Lenny Sang Surya, MKM | KP 2.8 B | Mahasiswa Mampu memahami tahap kegiatan statistik, konsep data, manajemen data dan analisis data | drg. Lenny Sang Surya, MKM"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "4",
+        "kode": "KP 2.9 A",
+        "materi": "Mahasiswa Mampu menjelaskan dan memahami Uji hipotesis",
+        "dosen": "Harry Wahyudi, M.Si | KP 2.9 B | Mahasiswa Mampu menjelaskan dan memahami Uji hipotesis | Harry Wahyudi, M.Si"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "5",
+        "kode": "SL 2.3 A",
+        "materi": "Mahasiswa mampu melakukan uji hipotesis parametrik dan non- parametrik 1",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si | SL 2.3 B | Mahasiswa mampu melakukan uji hipotesis parametrik dan non- parametrik 1 | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "6",
+        "kode": "SL 2.4 A",
+        "materi": "Mahasiswa mampu melakukan uji hipotesis parametrik dan non- parametrik 2",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si | SL 2.4 B | Mahasiswa mampu melakukan uji hipotesis parametrik dan non- parametrik 2 | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "7",
+        "kode": "SL 2.5 A",
+        "materi": "Mahasiswa Mampu Membuat Penyusunan Bab 1 Proposal Penelitian",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio | SL 2.5 B | Mahasiswa Mampu Membuat Penyusunan Bab 1 Proposal Penelitian | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio"
+    },
+    {
+        "minggu": "Minggu II",
+        "rentang_tanggal": "2 Maret 2025 \u2013 7 Maret 2026",
+        "no": "8",
+        "kode": "A & b",
+        "materi": "Pleno 2",
+        "dosen": "drg. Lenny Sang Surya, MKM (Pj. Blok) | Azmil Hadi,drg. Sp.Ort (Sekretaris Blok) | Dr.drg. Dhona Apriza, M.Biomed (Pakar Skenario 2)"
+    },
+    {
+        "minggu": "Minggu III",
+        "rentang_tanggal": "9 Maret 2026 \u2013 14 Maret 2026",
+        "no": "1",
+        "kode": "SL 3.6 A",
+        "materi": "Mahasiswa Mampu Membuat Penyusunan Bab 2 Proposal penelitian",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio | SL 3.6 B | Mahasiswa Mampu Membuat Penyusunan Bab 2 Proposal Penelitian | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio"
+    },
+    {
+        "minggu": "Minggu III",
+        "rentang_tanggal": "9 Maret 2026 \u2013 14 Maret 2026",
+        "no": "2",
+        "kode": "SL 3.7 A",
+        "materi": "Mahasiswa Mampu Membuat Penyusunan Bab 3 Proposal Penelitian",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio | SL 3.7 B | Mahasiswa Mampu Membuat Penyusunan Bab 3 Proposal Penelitian | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio"
+    },
+    {
+        "minggu": "Minggu III",
+        "rentang_tanggal": "9 Maret 2026 \u2013 14 Maret 2026",
+        "no": "3",
+        "kode": "SL 3.8 A",
+        "materi": "Mahasiswa mampu Membuat Penyusunan Protokol Kelayakan Etik Penelitian",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio | SL 3.8 B | Mahasiswa mampu Membuat Penyusunan Protokol Kelayakan Etik Penelitian | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Dr. Drg. Citra Lestari, MDSc, Sp. Perio"
+    },
+    {
+        "minggu": "Minggu III",
+        "rentang_tanggal": "9 Maret 2026 \u2013 14 Maret 2026",
+        "no": "4",
+        "kode": "SL 3.9 A",
+        "materi": "Mahasiswa mampu membuat Scoping Review 1",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si | SL 3.9 B | Mahasiswa mampu membuat Scoping Review 1 | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si"
+    },
+    {
+        "minggu": "Minggu III",
+        "rentang_tanggal": "9 Maret 2026 \u2013 14 Maret 2026",
+        "no": "5",
+        "kode": "A & B",
+        "materi": "Pleno 3",
+        "dosen": "drg. Lenny Sang Surya, MKM (Pj. Blok) | Azmil Hadi,drg. Sp.Ort (Sekretaris Blok) | Harry Wahyudi, M.Si(Pakar Skenario 3)"
+    },
+    {
+        "minggu": "Minggu IV",
+        "rentang_tanggal": "30 Maret 2026 \u2013 4 April 2026",
+        "no": "1",
+        "kode": "SL 3.10 A",
+        "materi": "Mahasiswa mampu membuat Scoping Review 2",
+        "dosen": "drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si | SL 3.10 B | Mahasiswa mampu membuat Scoping Review 2 | drg. Lenny Sang Surya, MKM | Dr.drg. Dhona Apriza, M.Biomed | Harry Wahyudi, M.Si"
+    },
+    {
+        "minggu": "Minggu IV",
+        "rentang_tanggal": "30 Maret 2026 \u2013 4 April 2026",
+        "no": "2",
+        "kode": "A & B",
+        "materi": "Pleno 4",
+        "dosen": "drg. Lenny Sang Surya, MKM (Pj. Blok) | Azmil Hadi,drg. Sp.Ort (Sekretaris Blok) | Harry Wahyudi, M.Si(Pakar Skenario 4)"
+    }
+]

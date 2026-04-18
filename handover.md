@@ -46,5 +46,19 @@ Berikut adalah beberapa ide untuk meningkatkan fungsi aplikasi di masa mendatang
 - **Multi-School Support:** Jika ingin dikembangkan untuk lebih dari satu sekolah, diperlukan struktur koleksi Firestore yang membagi data berdasarkan `schoolId`.
 - **Mode Offline:** Memperkuat Service Worker agar jadwal tetap bisa dilihat meskipun tanpa koneksi internet (Caching Data).
 
+## 4. Modul PWA Jadwal Kuliah (Stand-Alone)
+
+Sebagai fitur ekstensi, aplikasi PWA ini juga sedang mengembangkan modul spesifik perkuliahan bersistem *Blok/SkS*. Kodenya diletakkan secara terpisah di direktori `/kuliah/` agar tidak merusak PWA utama (`index.html`).
+
+### Kondisi Saat Ini (Current State):
+- **Ekstraksi Data:** Skrip Python `jadwal_parser.py` telah berhasil dibuat untuk mengekstrak data dari arsip MS Word (contoh: `jadwal 2023.doc`). Skrip ini mengubah data mentah mingguan menjadi struktur yang dapat dikonsumsi Web yaitu `kuliah_parsed.json`.
+- **UI Base PWA:** Draf awal struktur tampilan `kuliah.html` & `kuliah.js` telah dibuat meniru Model CSS PWA original (seperti `card-shadow`, `bottom-navigation`, warna Tailwind). Sistem mem-parsing JSON menjadi bentuk interaktif Silabus *Timeline Accordion* dikategorikan per Minggu untuk kebutuhan mode Blok.
+- Seluruh file yang dibuat telah dipindahkan dari root `/` ke dalam folder `/kuliah/`.
+
+### Langkah Selanjutnya (Roadmap Modul Kuliah):
+1. **Penerjemahan Kalender (Mapping):** Membuat alur konversi jadwal Mingguan menjadi struktur Harfiah berserta tanggal yang presisi (H-Day calendar/Grid) sesuai dengan contoh format *output* `jadwal kuliah angkatan 2023.doc`.
+2. **Setup Penyimpanan / Entry Point:** Menentukan apakah sistem akan memakai file statis (otomasi Git) atau memerlukan input Dosen di antarmuka Admin (Firebase Web) guna memasukkan data Jam spesifik.
+3. **Penyatuan Interface:** Membuat jembatan akses Login bagi pengguna ber-role "Mahasiswa" agar dapat diarahkan dengan rapi ke halaman `/kuliah/kuliah.html`.
+
 ---
 *Dokumen ini dibuat untuk membantu proses transisi dan pemeliharaan kode ke depannya.*
